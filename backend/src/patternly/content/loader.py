@@ -109,9 +109,7 @@ def _rel(path: Path, content: Content) -> str:
 def _yaml_files(directory: Path) -> list[Path]:
     if not directory.is_dir():
         return []
-    return sorted(
-        p for p in directory.iterdir() if p.suffix in {".yaml", ".yml"} and not p.name.startswith("_")
-    )
+    return sorted(p for p in directory.iterdir() if p.suffix in {".yaml", ".yml"} and not p.name.startswith("_"))
 
 
 def load_content(root: Path) -> Content:
@@ -131,9 +129,7 @@ def load_content(root: Path) -> Content:
             if p is None:
                 continue
             if p.id in content.patterns:
-                content.issues.append(
-                    Issue("error", f"{PATTERNS_FILE} [{i}]", f"duplicate pattern id '{p.id}'")
-                )
+                content.issues.append(Issue("error", f"{PATTERNS_FILE} [{i}]", f"duplicate pattern id '{p.id}'"))
             content.patterns[p.id] = p
 
     for path in _yaml_files(root / SCENARIOS_DIR):
@@ -151,13 +147,9 @@ def load_content(root: Path) -> Content:
         if a is None:
             continue
         if path.stem != a.scenario:
-            content.issues.append(
-                Issue("error", _rel(path, content), f"file name must match scenario '{a.scenario}'")
-            )
+            content.issues.append(Issue("error", _rel(path, content), f"file name must match scenario '{a.scenario}'"))
         if a.scenario in content.answer_sets:
-            content.issues.append(
-                Issue("error", _rel(path, content), f"second answer file for '{a.scenario}'")
-            )
+            content.issues.append(Issue("error", _rel(path, content), f"second answer file for '{a.scenario}'"))
         content.answer_sets[a.scenario] = a
 
     split_path = root / SPLIT_FILE

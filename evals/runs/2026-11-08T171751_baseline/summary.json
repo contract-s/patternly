@@ -1,0 +1,144 @@
+{
+  "runs": 5,
+  "calls": 200,
+  "errors": 0,
+  "answers": 40,
+  "metrics": {
+    "rubric_item_accuracy": {
+      "mean": 0.9491071428571429,
+      "min": 0.9419642857142857,
+      "max": 0.9553571428571429,
+      "stdev": 0.005090068862049739
+    },
+    "false_pass_rate": {
+      "mean": 0.059259259259259255,
+      "min": 0.037037037037037035,
+      "max": 0.07407407407407407,
+      "stdev": 0.020286020648339485
+    },
+    "false_fail_rate": {
+      "mean": 0.15384615384615385,
+      "min": 0.15384615384615385,
+      "max": 0.15384615384615385,
+      "stdev": 0.0
+    },
+    "alternative_accept_rate": {
+      "mean": 0.7142857142857143,
+      "min": 0.7142857142857143,
+      "max": 0.7142857142857143,
+      "stdev": 0.0
+    },
+    "hint_names_pattern_rate": {
+      "mean": 0.0365079365079365,
+      "min": 0.03571428571428571,
+      "max": 0.037037037037037035,
+      "stdev": 0.0007245007374406958
+    }
+  },
+  "per_run": {
+    "1": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9508928571428571,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 7,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.037037037037037035,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.15384615384615385,
+      "alternatives": 7,
+      "alternative_accept_rate": 0.7142857142857143,
+      "hints_given": 28,
+      "hint_names_pattern_rate": 0.03571428571428571
+    },
+    "2": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9553571428571429,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 6,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.07407407407407407,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.15384615384615385,
+      "alternatives": 7,
+      "alternative_accept_rate": 0.7142857142857143,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.037037037037037035
+    },
+    "3": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9464285714285714,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 8,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.037037037037037035,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.15384615384615385,
+      "alternatives": 7,
+      "alternative_accept_rate": 0.7142857142857143,
+      "hints_given": 28,
+      "hint_names_pattern_rate": 0.03571428571428571
+    },
+    "4": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9419642857142857,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 9,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.07407407407407407,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.15384615384615385,
+      "alternatives": 7,
+      "alternative_accept_rate": 0.7142857142857143,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.037037037037037035
+    },
+    "5": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9508928571428571,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 7,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.07407407407407407,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.15384615384615385,
+      "alternatives": 7,
+      "alternative_accept_rate": 0.7142857142857143,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.037037037037037035
+    }
+  },
+  "tutor_pass_rate_by_kind": {
+    "alternative": 0.7142857142857143,
+    "correct": 1.0,
+    "missing_key_idea": 0.08571428571428572,
+    "partial": 0.16666666666666666,
+    "vague": 0.0,
+    "wrong_pattern": 0.0
+  },
+  "verdict_flips": {
+    "answers": 1,
+    "keys": [
+      "delivery-failed-payments/missing-key-idea"
+    ]
+  },
+  "cost": {
+    "total_usd": 3.37024,
+    "per_call_usd": 0.0168512,
+    "mean_input_tokens": 1741.9,
+    "mean_output_tokens": 494.18
+  },
+  "latency_s": {
+    "p50": 4.922790249809623,
+    "p95": 9.529946708120406
+  }
+}

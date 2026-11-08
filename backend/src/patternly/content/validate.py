@@ -102,9 +102,7 @@ def weekend1_progress(content: Content, issues: list[Issue]) -> Progress:
     """An answer counts as labeled only when it has no errors of its own."""
     bad = {i.where for i in issues if i.level == "error"}
     labeled = sum(
-        1
-        for la in content.all_answers()
-        if f"{ANSWERS_DIR}/{la.scenario.id}.yaml [{la.answer.id}]" not in bad
+        1 for la in content.all_answers() if f"{ANSWERS_DIR}/{la.scenario.id}.yaml [{la.answer.id}]" not in bad
     )
     return Progress(
         patterns_used=len({s.pattern for s in content.scenarios.values() if s.pattern in content.patterns}),

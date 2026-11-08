@@ -1,4 +1,4 @@
-"""`patternly` command line: validate, stats, seal."""
+"""`patternly` command line: validate, stats, seal, eval."""
 
 from __future__ import annotations
 
@@ -67,9 +67,7 @@ def cmd_stats(args: argparse.Namespace) -> int:
     print(row("scenarios", progress.scenarios, TARGET_SCENARIOS))
     print(row("labeled answers", progress.labeled_answers, TARGET_SCENARIOS * ANSWERS_PER_SCENARIO))
     print(row("sealed test answers", progress.sealed, TARGET_SEALED))
-    print(
-        f"  [{'x' if progress.errors == 0 else ' '}] {'no validation errors':30} {progress.errors} error(s)"
-    )
+    print(f"  [{'x' if progress.errors == 0 else ' '}] {'no validation errors':30} {progress.errors} error(s)")
     print(f"\nWeekend 1 {'DONE' if progress.done else 'not done yet'}")
     return 0
 
@@ -98,6 +96,47 @@ def cmd_seal(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eval(args: argparse.Namespace) -> int:
+    # Imported here so the content commands work without the API packages or a key.
+    import anthropic
+    from dotenv import load_dotenv
+
+    from .evals.runner import EvalConfig, run_eval
+
+    if args.split == "sealed" and not args.final:
+        print(
+            "The sealed set is only for final reported numbers. Re-run with --final once you've "
+            "stopped changing the tutor.",
+            file=sys.stderr,
+        )
+        return 1
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+    content = load_content(_content_dir(args))
+    errors = [i for i in check(content) if i.level == "error"]
+    if errors:
+        print("Fix validation errors first (run `patternly validate`).", file=sys.stderr)
+        return 1
+    config = EvalConfig(
+        label=args.label,
+        split=args.split,
+        runs=args.runs,
+        model=args.model,
+        effort=args.effort,
+        concurrency=args.concurrency,
+        limit=args.limit,
+    )
+    out_root = Path(args.out) if args.out else content.root.parent / "evals" / "runs"
+
+    def progress(done: int, total: int) -> None:
+        print(f"\r{done}/{total} calls", end="", file=sys.stderr, flush=True)
+
+    out_dir, summary = run_eval(anthropic.Anthropic(), content, config, out_root, progress)
+    print(file=sys.stderr)
+    print((out_dir / "summary.md").read_text())
+    print(f"Saved to {out_dir}")
+    return 0 if summary["errors"] == 0 else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="patternly", description="Patternly content tools")
     parser.add_argument("--content", help="path to the content directory (default: nearest content/)")
@@ -116,6 +155,20 @@ def build_parser() -> argparse.ArgumentParser:
     seal.add_argument("--force", action="store_true", help="overwrite an existing splits.yaml")
     seal.add_argument("--allow-incomplete", action="store_true", help="seal before all answers are labeled")
     seal.set_defaults(func=cmd_seal)
+
+    from .tutor.baseline import DEFAULT_EFFORT, DEFAULT_MODEL
+
+    ev = sub.add_parser("eval", help="grade labeled answers with the tutor and report accuracy")
+    ev.add_argument("--split", choices=["dev", "sealed"], default="dev")
+    ev.add_argument("--final", action="store_true", help="required to run on the sealed split")
+    ev.add_argument("--runs", type=int, default=5, help="passes over every answer (default 5)")
+    ev.add_argument("--model", default=DEFAULT_MODEL)
+    ev.add_argument("--effort", default=DEFAULT_EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
+    ev.add_argument("--concurrency", type=int, default=8)
+    ev.add_argument("--limit", type=int, help="only the first N answers (for a quick check)")
+    ev.add_argument("--label", default="baseline", help="name for the results folder")
+    ev.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
+    ev.set_defaults(func=cmd_eval)
     return parser
 
 
