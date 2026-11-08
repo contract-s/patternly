@@ -1,0 +1,22 @@
+id: days-until-warmer
+pattern: monotonic-stack
+title: Days until a warmer day
+prompt: |
+  A weather app shows, for each day in a year of forecasts, how many days you'd wait until a warmer day. If no warmer day comes, show 0. Comparing every day with every later day is too slow for long histories.
+rubric:
+- id: stack-waiting
+  idea: Keeps a stack of days that are still waiting for a warmer day.
+- id: decreasing-order
+  idea: The waiting days' temperatures on the stack go down from bottom to top.
+- id: pop-on-warmer
+  idea: When a new day is warmer than the top, pops that day and sets its answer to the difference in day numbers, repeating while the new day is warmer.
+- id: push-current
+  idea: Then pushes the current day onto the stack.
+- id: leftovers-zero
+  idea: Days still on the stack at the end never got a warmer day, so their answer is 0.
+- id: linear
+  idea: Each day is pushed and popped at most once, so O(n).
+reference_solution: |
+  Walk the days in order with a stack of indexes. For day i, while the stack isn't empty and temp[i] is greater than temp at the top, pop the top j and set answer[j] = i - j. Push i. Anything left at the end keeps answer 0.
+time_complexity: O(n)
+space_complexity: O(n)

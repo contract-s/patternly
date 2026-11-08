@@ -1,0 +1,22 @@
+id: sort-log-larger-than-memory
+pattern: merge-sort
+title: Sorting a log file bigger than memory
+prompt: |
+  An analytics job has to sort a 200 GB event log by timestamp, but the machine has only 4 GB of RAM. Reading and writing the disk in long sequential runs is fine; jumping around the file randomly is very slow.
+rubric:
+- id: chunk
+  idea: Splits the file into chunks that fit in memory.
+- id: sort-chunks
+  idea: Sorts each chunk in memory and writes it back to disk as a sorted run.
+- id: merge-runs
+  idea: Merges the sorted runs by repeatedly taking the smallest front record among them.
+- id: min-heap
+  idea: Uses a min-heap over the runs' current front records (or merges in passes) to find the smallest quickly.
+- id: sequential-io
+  idea: Explains that every run is read front to back, so the disk access is sequential.
+- id: cost
+  idea: O(n log n) comparisons overall, with the data read and written only a couple of times.
+reference_solution: |
+  Read about 4 GB at a time, sort it in memory, and write it out as a sorted run, giving about 50 runs. Then open all runs, keep a small read buffer for each, and put each run's first record in a min-heap. Pop the smallest, write it to the output, and push the next record from the same run. Every file is read sequentially.
+time_complexity: O(n log n)
+space_complexity: O(memory size) in RAM, O(n) on disk

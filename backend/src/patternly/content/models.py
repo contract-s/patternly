@@ -20,6 +20,8 @@ class Pattern(Strict):
     name: str = Field(min_length=1)
     # Other names for the pattern. The leak checker treats these like the name.
     aliases: list[str] = []
+    # Short explanation shown at the reveal.
+    summary: str | None = None
 
 
 class RubricItem(Strict):

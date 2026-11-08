@@ -1,0 +1,22 @@
+id: course-prerequisite-plan
+pattern: topological-sort
+title: Planning courses around prerequisites
+prompt: |
+  A university planner gets a list of courses and their prerequisites (for example, Data Structures needs Intro to Programming). Produce an order in which a student can take every course, one at a time, or report that it's impossible because prerequisites loop.
+rubric:
+- id: directed-graph
+  idea: Models courses as nodes with a directed edge from each prerequisite to the course that needs it.
+- id: indegree
+  idea: Counts how many unmet prerequisites each course has.
+- id: start-zero
+  idea: Starts with all courses that have no prerequisites.
+- id: remove-and-update
+  idea: Takes an available course, adds it to the order, and lowers the count for each course that needed it, making any that hit zero available.
+- id: cycle-detect
+  idea: If the order ends up shorter than the number of courses, there's a prerequisite loop and no plan exists.
+- id: cost
+  idea: O(V + E).
+reference_solution: |
+  Build the graph and count incoming edges per course. Put every course with count 0 in a queue. Repeatedly remove one, append it to the plan, and decrement the counts of the courses that depend on it, queueing any that reach 0. If the plan has every course, return it; otherwise the remaining courses are in a loop.
+time_complexity: O(V + E)
+space_complexity: O(V + E)

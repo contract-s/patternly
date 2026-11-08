@@ -1,0 +1,22 @@
+id: spreadsheet-circular-reference
+pattern: dfs
+title: Detecting circular references in a spreadsheet
+prompt: |
+  A spreadsheet app needs to warn users when formulas refer to each other in a loop, like A1 uses B2, B2 uses C3, and C3 uses A1. Given each cell and the cells its formula reads from, decide whether any loop exists.
+rubric:
+- id: directed-graph
+  idea: Models each cell as a node with a directed edge to each cell its formula reads.
+- id: explore-each
+  idea: Starts an exploration from every cell that hasn't been fully explored yet.
+- id: three-states
+  idea: 'Tracks three states per cell: not started, in progress (on the current path), and finished.'
+- id: back-edge-cycle
+  idea: Reports a loop when the exploration reaches a cell that is in progress, since that means the path came back to itself.
+- id: finished-skip
+  idea: Marks a cell finished after all the cells it reads are explored, and skips finished cells later, which keeps it linear.
+- id: linear-graph
+  idea: Runs in O(V + E).
+reference_solution: |
+  Give every cell a state: unvisited, visiting, done. For each unvisited cell, explore: set it to visiting, and for each cell it reads, if that cell is visiting there's a loop; if unvisited, explore it. When all of its references are handled, set it to done. If no exploration ever hits a visiting cell, there's no loop.
+time_complexity: O(V + E)
+space_complexity: O(V)

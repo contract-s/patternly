@@ -1,0 +1,20 @@
+id: playlist-no-repeats
+pattern: sliding-window
+title: Longest run of songs with no repeats
+prompt: |
+  A music app wants to show each listener their longest run of consecutive plays where no song played twice. Given the ordered list of song IDs a listener played this year, find the length of that longest run.
+rubric:
+- id: contiguous-range
+  idea: Treats the run as a range between a left and a right position.
+- id: seen-lookup
+  idea: Keeps a hash map (or set) of songs in the current range, or each song's last position, for O(1) duplicate checks.
+- id: shrink-on-repeat
+  idea: When the new song is already in the range, moves the left end past that song's earlier play.
+- id: track-best
+  idea: Updates the best length after each new song is added.
+- id: linear-time
+  idea: Each play is added and removed at most once, giving O(n) time.
+reference_solution: |
+  Keep a map from song ID to the last index it was played, and left = 0. For each right: if the song at right was last played at an index >= left, move left to that index + 1. Record the song's index as right and update best with right - left + 1.
+time_complexity: O(n)
+space_complexity: O(k) for k distinct songs

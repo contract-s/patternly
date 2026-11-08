@@ -1,0 +1,22 @@
+id: autocorrect-edit-distance
+pattern: dynamic-programming
+title: How many edits between two words
+prompt: |
+  An autocorrect feature ranks dictionary words by how close they are to what the user typed. Closeness is the minimum number of single-letter inserts, deletes, or replacements to turn the typed word into the dictionary word. Compute that number for two words.
+rubric:
+- id: subproblem
+  idea: Defines d[i][j] as the edits to turn the first i letters of the typed word into the first j letters of the target.
+- id: match-case
+  idea: If the last letters match, d[i][j] = d[i-1][j-1] with no edit needed.
+- id: three-ops
+  idea: Otherwise takes 1 + the minimum of delete (d[i-1][j]), insert (d[i][j-1]), and replace (d[i-1][j-1]).
+- id: base-cases
+  idea: d[i][0] = i and d[0][j] = j, since turning a prefix into an empty word (or the reverse) takes that many edits.
+- id: table-order
+  idea: Fills the table row by row so each cell's three neighbors are already done.
+- id: cost
+  idea: O(m x n) time for words of length m and n.
+reference_solution: |
+  Build an (m + 1) x (n + 1) table. Fill the first column with 0..m and the first row with 0..n. For each i, j: if typed[i-1] == target[j-1], copy d[i-1][j-1]; otherwise take 1 + min of the cell above, the cell to the left, and the diagonal. The answer is d[m][n]. Only the previous row is needed if memory matters.
+time_complexity: O(m x n)
+space_complexity: O(m x n), or O(n) keeping one row

@@ -1,0 +1,22 @@
+id: rural-fiber-network
+pattern: kruskal
+title: Cheapest fiber network for rural towns
+prompt: |
+  A county wants to connect all of its towns with fiber so any town can reach any other, possibly through other towns. Engineers priced every cable that could be laid between pairs of towns. Choose which cables to lay so all towns are connected and the total cost is as low as possible.
+rubric:
+- id: spanning-framing
+  idea: States the goal as connecting every town with no wasted loops, since a loop means one cable could be removed.
+- id: sort-edges
+  idea: Sorts the possible cables from cheapest to most expensive.
+- id: greedy-join
+  idea: Goes through cables in that order and lays one only if it connects two towns that aren't already connected.
+- id: union-find
+  idea: Uses a union-find (disjoint set) structure to check whether two towns are already connected and to merge their groups.
+- id: stop-count
+  idea: Is done after laying n - 1 cables for n towns.
+- id: cost
+  idea: O(E log E), dominated by sorting the cables.
+reference_solution: |
+  Sort cables by price. Put every town in its own group in a union-find structure. For each cable from cheapest up, if its two towns are in different groups, lay it and merge the groups; otherwise skip it because it would make a loop. Stop after n - 1 cables are laid. Taking the cheapest safe cable each time gives the minimum total.
+time_complexity: O(E log E)
+space_complexity: O(V)

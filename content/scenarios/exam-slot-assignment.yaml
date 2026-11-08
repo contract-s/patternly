@@ -1,0 +1,22 @@
+id: exam-slot-assignment
+pattern: backtracking
+title: Scheduling exams with no student clashes
+prompt: |
+  A registrar must place each course's final exam into one of k time slots. If any student takes both courses, the two exams can't share a slot. Given which pairs of courses share students, find a valid assignment or say none exists.
+rubric:
+- id: conflict-graph
+  idea: Models courses as nodes with an edge between courses that share a student.
+- id: assign-one
+  idea: Assigns a slot to one course at a time.
+- id: check-constraint
+  idea: Before using a slot, checks that no already-assigned conflicting course uses it.
+- id: undo-on-dead-end
+  idea: If a course can't get any slot, goes back, undoes the previous course's slot, and tries its next one.
+- id: report
+  idea: Succeeds when every course has a slot, and reports none exists when every option has been tried.
+- id: order-heuristic
+  idea: Assigns the most-constrained courses first (most conflicts) to hit dead ends early.
+reference_solution: |
+  Order courses by number of conflicts, most first. Recurse on course index i: if i equals the number of courses, done. For each slot s, if no conflicting course already has s, assign it and recurse on i + 1; if that succeeds, return success, else unassign and try the next slot. If no slot works, return failure so the caller tries something else.
+time_complexity: O(k^n) worst case
+space_complexity: O(n)

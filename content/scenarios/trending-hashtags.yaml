@@ -1,0 +1,20 @@
+id: trending-hashtags
+pattern: heap
+title: Top 10 trending hashtags in an hour
+prompt: |
+  A social app processes tens of millions of posts an hour. At the end of each hour it shows the 10 most-used hashtags. There may be millions of distinct hashtags, and fully sorting all of them every hour is wasteful.
+rubric:
+- id: count
+  idea: Counts uses per hashtag with a hash map.
+- id: size-k
+  idea: Keeps a collection of only the current top 10 candidates, organized so the smallest of them is instantly available (a min-heap of size 10).
+- id: replace-smallest
+  idea: For each hashtag, if it beats the smallest of the 10, removes that smallest and inserts the new one.
+- id: why-min
+  idea: 'Explains why the collection keeps the smallest on top: that''s the one to compare against and evict.'
+- id: cost
+  idea: O(n log k) for n distinct hashtags and k = 10, versus O(n log n) to sort everything.
+reference_solution: |
+  Count every hashtag in a hash map. Then walk the counts with a min-heap capped at 10: push while it has fewer than 10; after that, if a count is larger than the heap's top, pop the top and push the new one. At the end the heap holds the top 10; sort those 10 for display.
+time_complexity: O(n log k)
+space_complexity: O(n + k)

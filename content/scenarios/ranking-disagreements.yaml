@@ -1,0 +1,20 @@
+id: ranking-disagreements
+pattern: merge-sort
+title: Counting disagreements between two rankings
+prompt: |
+  Two film critics each ranked the same 50,000 films. A website wants to report how much they disagree: the number of pairs of films that the two critics put in opposite order. Checking all pairs is about 1.25 billion comparisons, which is too slow.
+rubric:
+- id: reduce
+  idea: Relabels films by critic A's rank and lists them in critic B's order, so the answer is the number of out-of-order pairs in that list.
+- id: divide
+  idea: Splits the list in half and counts out-of-order pairs inside each half recursively.
+- id: count-while-merging
+  idea: While merging the two sorted halves, each time an item from the right half is taken, adds the number of items still waiting in the left half.
+- id: sorted-output
+  idea: Returns each half sorted, so the merge step can count across the halves in linear time.
+- id: cost
+  idea: O(n log n) instead of O(n^2).
+reference_solution: |
+  Write each film's rank from critic A in the order critic B listed them. Count out-of-order pairs recursively: split in half, count each half, then merge. While merging, when the next smallest comes from the right half, every item left in the left half is bigger and earlier, so add that many to the count. Return the merged list and total.
+time_complexity: O(n log n)
+space_complexity: O(n)

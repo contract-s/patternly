@@ -7,4 +7,101 @@
 #     name: My Pattern
 #     aliases: [another name]
 
-patterns: []
+patterns:
+- id: dutch-national-flag
+  name: Dutch national flag
+  aliases:
+  - Dutch flag
+  - three-way partition
+  - three-way partitioning
+  summary: 'Partition items into three groups in one pass using three pointers: everything before `low` is group 1, between `low` and `mid` is group 2, after `high` is group 3, and `mid` scans the unknown middle.'
+- id: sliding-window
+  name: Sliding window
+  aliases: []
+  summary: Keep a contiguous range defined by a left and right index. Grow the right end, shrink the left end whenever the range breaks a rule, and track the best valid range. Each element enters and leaves once.
+- id: binary-search
+  name: Binary search
+  aliases:
+  - bisection
+  - bisect
+  summary: When a yes/no question flips exactly once across a sorted range, test the middle and throw away the half that can't contain the answer, halving the range each step.
+- id: bfs
+  name: Breadth-first search
+  aliases:
+  - breadth first search
+  - BFS
+  summary: Explore a graph in rings outward from the start using a queue. In an unweighted graph the first time you reach a node is along a path with the fewest edges.
+- id: dfs
+  name: Depth-first search
+  aliases:
+  - depth first search
+  - DFS
+  summary: Follow one path as deep as it goes before backing up, usually with recursion or a stack, marking nodes as visited. Good for exploring connected regions and finding cycles.
+- id: kruskal
+  name: Kruskal's algorithm
+  aliases:
+  - Kruskal
+  - Kruskals
+  - minimum spanning tree
+  - spanning tree
+  - MST
+  summary: Sort connections by cost and add each one that joins two separate groups, using union-find to track groups. The result connects everything at minimum total cost.
+- id: dynamic-programming
+  name: Dynamic programming
+  aliases:
+  - DP
+  - memoization
+  - memoize
+  - tabulation
+  summary: Define the answer for a smaller version of the problem, write how a bigger answer is built from smaller ones, and compute each subproblem once, bottom-up or with memoization.
+- id: dijkstra
+  name: Dijkstra's algorithm
+  aliases:
+  - Dijkstra
+  - Dijkstras
+  summary: 'For non-negative edge weights: repeatedly take the closest unfinished node from a min-priority queue, finalize its distance, and relax its outgoing edges.'
+- id: quicksort
+  name: Quicksort
+  aliases:
+  - quick sort
+  summary: Pick a pivot, partition so smaller items are left of it and larger items right, then sort each side the same way. In place, O(n log n) on average with a random pivot.
+- id: merge-sort
+  name: Merge sort
+  aliases:
+  - mergesort
+  summary: Split in half, sort each half, then merge the two sorted halves by repeatedly taking the smaller front item. Always O(n log n), stable, and works on data streamed from disk.
+- id: topological-sort
+  name: Topological sort
+  aliases:
+  - topological order
+  - topological ordering
+  - Kahn's algorithm
+  - Kahn
+  summary: 'Order the nodes of a directed graph so every edge points forward: repeatedly output nodes with no remaining incoming edges. If some nodes never get there, the graph has a cycle.'
+- id: heap
+  name: Heap
+  aliases:
+  - priority queue
+  - min-heap
+  - max-heap
+  - heaps
+  summary: A heap gives the smallest (or largest) item in O(1) and inserts or removes in O(log n). A size-k heap keeps the top k of a stream; two heaps keep a running median.
+- id: monotonic-stack
+  name: Monotonic stack
+  aliases:
+  - monotone stack
+  summary: Keep a stack whose values only increase (or only decrease). When a new item breaks the order, the items it pops have just found their next greater or smaller element. Each item is pushed and popped once.
+- id: prefix-sum
+  name: Prefix sums
+  aliases:
+  - prefix sum
+  - cumulative sum
+  - cumulative sums
+  - running total
+  - running totals
+  summary: Precompute the total up to each position; the sum of any range is the difference of two of those totals. Pair with a hash map to count ranges that hit a target.
+- id: backtracking
+  name: Backtracking
+  aliases:
+  - backtrack
+  summary: Build a solution one choice at a time; after each choice, recurse, then undo it and try the next. Abandon a branch as soon as it can't lead to a valid solution.

@@ -1,0 +1,22 @@
+id: return-triage-conveyor
+pattern: dutch-national-flag
+title: Sorting returned packages on a conveyor
+prompt: |
+  A returns warehouse has a conveyor with n slots, each holding one package tagged REFUND, REPAIR, or RESTOCK. Reorder the packages so all REFUND packages come first, then all REPAIR, then all RESTOCK. The only move allowed is swapping two slots, there's no spare space to set packages aside, and the arm should pass over the conveyor only once. Order within a tag doesn't matter.
+rubric:
+- id: three-regions
+  idea: Keeps three boundaries (start of REPAIR, current position, start of RESTOCK) so the conveyor is always split into done-REFUND, done-REPAIR, unknown, and done-RESTOCK sections.
+- id: single-scan
+  idea: Walks one pointer through the unknown section, deciding each package by its tag.
+- id: refund-swap
+  idea: A REFUND package is swapped to the front boundary, and both the front boundary and the scan pointer move forward.
+- id: restock-no-advance
+  idea: A RESTOCK package is swapped with the back boundary, which moves backward, and the scan pointer does not advance because the package swapped in hasn't been checked yet.
+- id: stop-condition
+  idea: Stops when the scan pointer passes the back boundary, because nothing unknown is left.
+- id: linear-in-place
+  idea: One pass, O(n) time, and only a few indexes of extra space.
+reference_solution: |
+  Keep three indexes: low = 0, mid = 0, high = n - 1. Slots before low are REFUND, slots from low up to mid are REPAIR, slots after high are RESTOCK, and mid..high is unchecked. While mid <= high: if slot mid is REFUND, swap it with low and move both low and mid forward; if REPAIR, just move mid forward; if RESTOCK, swap it with high and move high back, but leave mid where it is so the swapped-in package gets checked. Each step shrinks the unchecked part by one, so it's one pass with no extra storage.
+time_complexity: O(n)
+space_complexity: O(1)

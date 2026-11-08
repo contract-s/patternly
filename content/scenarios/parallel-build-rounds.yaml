@@ -1,0 +1,22 @@
+id: parallel-build-rounds
+pattern: topological-sort
+title: Fewest rounds to build all modules
+prompt: |
+  A build system compiles hundreds of modules, and each module can only compile after the modules it depends on finish. There are unlimited build machines, and every module takes the same time. What's the fewest number of rounds to compile everything, and which modules go in each round?
+rubric:
+- id: directed-graph
+  idea: Models modules as nodes with edges from a dependency to the module that needs it.
+- id: indegree
+  idea: Counts each module's unbuilt dependencies.
+- id: round-is-level
+  idea: Builds every module whose count is zero together as one round.
+- id: update-next-round
+  idea: After a round, lowers the counts of dependents and collects the ones that reach zero for the next round.
+- id: rounds-answer
+  idea: The number of rounds is the answer, which equals the longest chain of dependencies.
+- id: cycle-detect
+  idea: If modules are left that never reach zero, there's a dependency loop.
+reference_solution: |
+  Compute dependency counts. Round 1 is every module with count 0. For each module in the current round, decrement the counts of modules that depend on it; the ones that reach 0 form the next round. Repeat until no modules are ready. The number of rounds is the answer if every module was built; otherwise report a loop.
+time_complexity: O(V + E)
+space_complexity: O(V + E)

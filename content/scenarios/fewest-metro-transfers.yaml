@@ -1,0 +1,22 @@
+id: fewest-metro-transfers
+pattern: bfs
+title: Fewest stops between two metro stations
+prompt: |
+  A city metro app needs to tell riders the route between two stations with the fewest stops. You have a list of which stations connect directly to each other, and every hop counts the same. Find the minimum number of hops and the route.
+rubric:
+- id: graph-model
+  idea: Models stations as nodes and direct connections as edges.
+- id: queue-by-level
+  idea: Starts from the origin and explores stations in order of distance using a FIFO queue, one ring of neighbors at a time.
+- id: visited-on-enqueue
+  idea: Marks a station as visited when it's added to the queue so it's never added twice.
+- id: first-reach-shortest
+  idea: Explains that because all hops cost the same, the first time the destination is reached is along a fewest-hop route.
+- id: parent-links
+  idea: Stores which station each one was reached from, and walks those links back to rebuild the route.
+- id: linear-graph
+  idea: 'Runs in O(V + E): each station and connection is handled once.'
+reference_solution: |
+  Put the origin in a queue with distance 0 and mark it visited. Repeatedly take the front station; for each unvisited neighbor, mark it, record its parent and distance + 1, and add it to the back. Stop when the destination is taken off the queue; follow parents back to the origin for the route. Equal hop costs mean this order reaches every station by a fewest-hop path.
+time_complexity: O(V + E)
+space_complexity: O(V)

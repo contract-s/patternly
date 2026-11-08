@@ -1,0 +1,22 @@
+id: broadcast-latency
+pattern: dijkstra
+title: Time for a message to reach every server
+prompt: |
+  A config update is sent from one server and each server forwards it along network links. Each link has a known, non-negative delay. How long until every server has received the update? Return -1 if some server can't be reached.
+rubric:
+- id: weighted-graph
+  idea: Models servers as nodes and links as edges weighted by delay.
+- id: shortest-from-source
+  idea: Recognizes each server receives the update at its shortest-delay time from the source.
+- id: min-queue
+  idea: Uses a min-priority queue keyed by current best delay, starting from the source at 0.
+- id: relax
+  idea: Updates a neighbor's delay when going through the current server is faster.
+- id: max-of-shortest
+  idea: Answers with the largest of those shortest delays, since that's when the last server gets it.
+- id: unreachable
+  idea: Returns -1 if any server's delay is still infinity.
+reference_solution: |
+  Run the closest-first search: dist[source] = 0, others infinity, a min-priority queue of (delay, server). Pop the smallest, skip outdated entries, and relax each link. After the queue empties, if any dist is infinity return -1, otherwise return the maximum dist.
+time_complexity: O((V + E) log V)
+space_complexity: O(V)

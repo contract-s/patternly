@@ -1,0 +1,22 @@
+id: count-land-masses
+pattern: dfs
+title: Counting land masses on a satellite map
+prompt: |
+  A mapping team has a satellite image turned into a grid where each cell is land or water. Two land cells belong to the same land mass if they touch up, down, left, or right. Count how many separate land masses are in the image.
+rubric:
+- id: grid-graph
+  idea: Treats land cells as nodes connected to neighboring land cells.
+- id: scan-cells
+  idea: Goes over every cell in the grid.
+- id: start-new-mass
+  idea: When it finds land that hasn't been visited, counts one new land mass and starts exploring from it.
+- id: explore-all-connected
+  idea: The exploration follows neighbors recursively (or with a stack) until it has visited every connected land cell.
+- id: visited-marking
+  idea: Marks cells visited (or flips them to water) so a land mass isn't counted twice.
+- id: linear-cells
+  idea: O(rows x columns), since each cell is visited a constant number of times.
+reference_solution: |
+  Loop over every cell. When you hit land that isn't visited, add one to the count and run a recursive explore from it: mark the cell visited, then explore each of its four neighbors that is unvisited land. When the explore returns, the whole land mass is marked, so later cells from it are skipped.
+time_complexity: O(rows x cols)
+space_complexity: O(rows x cols) for the visited marks and recursion

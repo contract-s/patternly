@@ -1,0 +1,22 @@
+id: datacenter-patch-spread
+pattern: bfs
+title: How long until every server is patched
+prompt: |
+  A datacenter is laid out as a grid. Each cell is an empty spot, an unpatched server, or a patched server. Every minute, each patched server pushes the patch to unpatched servers directly up, down, left, or right of it. How many minutes until every server is patched? Return -1 if some server can never be reached.
+rubric:
+- id: grid-graph
+  idea: Treats grid cells as nodes with edges to their four neighbors.
+- id: multi-source
+  idea: Starts with every initially patched server in the queue at once, not one at a time.
+- id: level-is-minute
+  idea: Processes the queue one level at a time, where each level is one minute.
+- id: mark-when-queued
+  idea: Marks a server patched as soon as it's queued so it isn't counted twice.
+- id: unreachable-check
+  idea: At the end, checks whether any unpatched server is left and returns -1 if so.
+- id: linear-cells
+  idea: 'O(rows x columns): every cell is queued at most once.'
+reference_solution: |
+  Queue every patched server and count the unpatched ones. Then, while the queue has items and servers are still unpatched, take every item currently queued (one minute's worth), patch their unpatched neighbors, queue those, and add one to minutes. When the loop ends, return minutes if none are left unpatched, else -1.
+time_complexity: O(rows x cols)
+space_complexity: O(rows x cols)

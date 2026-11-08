@@ -1,0 +1,22 @@
+id: transactions-exact-target
+pattern: prefix-sum
+title: Counting stretches that sum to an exact amount
+prompt: |
+  An auditor has a day's list of account transactions in order. Deposits are positive and refunds are negative. Count how many stretches of consecutive transactions add up to exactly a target amount T.
+rubric:
+- id: running-total
+  idea: Keeps a running total of the transactions so far.
+- id: difference-idea
+  idea: Explains that a stretch ending here sums to T exactly when some earlier running total equals the current total minus T.
+- id: hash-counts
+  idea: Uses a hash map counting how many times each running total has appeared.
+- id: seed-zero
+  idea: Starts the map with total 0 seen once, so stretches starting at the first transaction count.
+- id: why-not-window
+  idea: Explains that because refunds are negative, growing and shrinking a range doesn't work, since adding an item can lower the sum.
+- id: cost
+  idea: O(n) time.
+reference_solution: |
+  Keep counts = {0: 1}, total = 0, answer = 0. For each transaction, add it to total, add counts[total - T] (if present) to answer, then increment counts[total]. Every earlier total equal to total - T marks the start of a stretch that ends here and sums to T.
+time_complexity: O(n)
+space_complexity: O(n)

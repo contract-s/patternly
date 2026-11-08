@@ -1,0 +1,22 @@
+id: gift-card-exact-spend
+pattern: backtracking
+title: Every way to spend a gift card exactly
+prompt: |
+  A cafe app wants to suggest every combination of menu items that uses a gift card exactly, with no change left. Each item can be picked at most once, and the same set of items in a different order counts once. Prices are positive. List all such combinations.
+rubric:
+- id: build-incrementally
+  idea: Builds a combination one item at a time, deciding for each item whether to include it.
+- id: choose-explore-undo
+  idea: After adding an item, recurses to choose more, then removes it and tries the next option.
+- id: forward-index
+  idea: Only considers items after the last one chosen, which avoids listing the same set in a different order.
+- id: prune
+  idea: Stops a branch as soon as the total goes over the card amount (sorting prices first allows stopping the loop early).
+- id: record
+  idea: Records the current combination when the total equals the card amount exactly.
+- id: cost
+  idea: Notes the worst case is exponential (up to 2^n subsets), and that pruning is what makes it practical.
+reference_solution: |
+  Sort prices. Recurse with (start index, remaining amount, current list). If remaining is 0, save a copy of the list. Otherwise for each i from start on: if price[i] > remaining, break, since later prices are bigger; else add item i, recurse with i + 1 and remaining - price[i], then remove item i.
+time_complexity: O(2^n) worst case
+space_complexity: O(n) recursion depth

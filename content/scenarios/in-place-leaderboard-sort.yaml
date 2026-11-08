@@ -1,0 +1,22 @@
+id: in-place-leaderboard-sort
+pattern: quicksort
+title: Sorting scores on a memory-tight device
+prompt: |
+  A handheld game console has to sort several million high-score entries by score. It has almost no spare memory, so the sort must happen inside the existing array, and it should be fast on average. The scores often arrive already nearly sorted.
+rubric:
+- id: pivot
+  idea: Picks a pivot value, chosen at random (or median of three).
+- id: partition
+  idea: Rearranges the range so values smaller than the pivot are on its left and larger ones on its right, in place.
+- id: pivot-final
+  idea: Notes the pivot is now in its final sorted position.
+- id: recurse
+  idea: Sorts the left part and the right part the same way.
+- id: random-pivot-why
+  idea: Explains that always picking the first or last item is O(n^2) on nearly sorted input, and a random pivot avoids that.
+- id: cost
+  idea: O(n log n) on average, in place, with O(log n) recursion stack if it recurses on the smaller side first.
+reference_solution: |
+  Pick a random index in the range and swap it to the end as the pivot. Walk the range keeping a boundary: each value smaller than the pivot is swapped to just after the boundary. Swap the pivot into the slot after the boundary, where it now belongs. Recurse on the left and right parts. Recursing on the smaller part first and looping on the larger keeps the stack at O(log n).
+time_complexity: O(n log n) average, O(n^2) worst
+space_complexity: O(log n)

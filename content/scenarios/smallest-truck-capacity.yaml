@@ -1,0 +1,20 @@
+id: smallest-truck-capacity
+pattern: binary-search
+title: Smallest truck that finishes on time
+prompt: |
+  A courier must ship a line of parcels in the given order. Each day the truck is loaded with the next parcels in line until adding another would exceed its capacity, and then it leaves. Given every parcel's weight and a deadline of D days, find the smallest truck capacity that gets everything delivered within D days.
+rubric:
+- id: search-answer
+  idea: 'Searches over possible capacities instead of over the parcels: the lowest is the heaviest parcel, the highest is the total weight.'
+- id: feasibility-check
+  idea: For a candidate capacity, simulates the loading greedily, counting how many days it takes, and compares that to D.
+- id: monotonic
+  idea: Notes that if a capacity works, any larger capacity works too, so feasibility flips once.
+- id: narrow-range
+  idea: If the candidate works, tries smaller (keeping it as a possible answer); if it doesn't, tries larger.
+- id: cost
+  idea: 'O(n log W) where W is the total weight: a linear check per step, with a logarithmic number of steps.'
+reference_solution: |
+  The answer lies between max(weight) and sum(weight). For a capacity c, count days by loading parcels in order and starting a new day when the next one won't fit; c works if days <= D. Since bigger capacities never take more days, binary search: if mid works set high = mid, else low = mid + 1. Return low.
+time_complexity: O(n log W)
+space_complexity: O(1)

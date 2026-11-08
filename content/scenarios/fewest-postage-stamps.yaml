@@ -1,0 +1,22 @@
+id: fewest-postage-stamps
+pattern: dynamic-programming
+title: Fewest stamps for exact postage
+prompt: |
+  A shipping kiosk has stamps of a few values, for example 1, 7, and 10 cents, in unlimited supply. For a parcel that needs exactly A cents of postage, print the fewest stamps that add up to A, or say it can't be done. Always taking the biggest stamp that fits doesn't work: 14 cents needs two 7s, not 10 + 1 + 1 + 1 + 1.
+rubric:
+- id: subproblem
+  idea: Defines best[a] as the fewest stamps that make exactly a cents.
+- id: recurrence
+  idea: best[a] = 1 + the minimum of best[a - s] over every stamp value s <= a.
+- id: base-cases
+  idea: best[0] = 0, and amounts that can't be made are marked impossible (infinity) and don't count.
+- id: order
+  idea: Fills amounts from small to large (or memoizes recursion) so smaller answers are ready when needed.
+- id: why-not-greedy
+  idea: Explains that the same smaller amounts are reused many times, and that greedy can be wrong, so trying all last stamps is needed.
+- id: cost
+  idea: O(A x number of stamp values) time.
+reference_solution: |
+  Make an array best of size A + 1, with best[0] = 0 and everything else infinity. For a from 1 to A, for each stamp s <= a, set best[a] = min(best[a], best[a - s] + 1). The answer is best[A], or impossible if it's still infinity. Keep the chosen stamp per amount to print the stamps.
+time_complexity: O(A x k)
+space_complexity: O(A)

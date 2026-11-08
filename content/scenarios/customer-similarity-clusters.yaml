@@ -1,0 +1,20 @@
+id: customer-similarity-clusters
+pattern: kruskal
+title: Splitting customers into k similar groups
+prompt: |
+  A marketing team has a similarity distance for every pair of customers and wants exactly k groups, so that customers in different groups are as far apart as possible (the closest pair across groups should be as distant as possible). Describe how to form the groups.
+rubric:
+- id: graph-model
+  idea: Treats customers as nodes and each pairwise distance as a weighted edge.
+- id: sort-edges
+  idea: Sorts all pairs from closest to farthest.
+- id: merge-closest
+  idea: Repeatedly joins the closest pair that are in different groups.
+- id: union-find
+  idea: Uses union-find to track and merge groups efficiently.
+- id: stop-at-k
+  idea: Stops merging when exactly k groups remain, and explains that the next unused edge is the gap between groups, which is as large as possible.
+reference_solution: |
+  Start with every customer alone. Sort pairs by distance and walk them from closest up; when a pair spans two groups, merge those groups with union-find. Each merge reduces the group count by one; stop when k groups are left. Because you merged the closest pairs first, the remaining cross-group distances are the largest possible.
+time_complexity: O(E log E)
+space_complexity: O(V)

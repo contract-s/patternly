@@ -1,0 +1,18 @@
+id: step-count-range-queries
+pattern: prefix-sum
+title: Fast step totals for any date range
+prompt: |
+  A fitness app stores daily step counts for each user going back years. Users run lots of queries like 'how many steps between March 3 and June 18?' Each query should answer instantly, even though they keep coming.
+rubric:
+- id: precompute
+  idea: Builds an array where entry i is the total steps from the first day through day i.
+- id: range-difference
+  idea: Answers a range as total up to the end day minus total up to the day before the start.
+- id: edge-case
+  idea: Handles a range starting at the first day, for example with a leading 0 entry.
+- id: cost
+  idea: Explains it's O(n) once to build and O(1) per query, versus re-adding the days every time.
+reference_solution: |
+  Make P with P[0] = 0 and P[i] = P[i-1] + steps[i-1]. Steps from day a to day b (0-based, inclusive) is P[b+1] - P[a]. Building P is one pass, and every query after that is one subtraction.
+time_complexity: O(n) build, O(1) per query
+space_complexity: O(n)

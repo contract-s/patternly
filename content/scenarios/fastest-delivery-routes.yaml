@@ -1,0 +1,22 @@
+id: fastest-delivery-routes
+pattern: dijkstra
+title: Fastest routes from the depot
+prompt: |
+  A delivery company has a road map where each road segment has a travel time in minutes (never negative). Every morning it needs the fastest travel time from the depot to every address on the map.
+rubric:
+- id: weighted-graph
+  idea: Models intersections and addresses as nodes and road segments as weighted edges.
+- id: init-distances
+  idea: Sets the depot's time to 0 and every other node's to infinity.
+- id: min-queue
+  idea: Uses a min-priority queue to always take the unfinished node with the smallest known time next.
+- id: relax
+  idea: For the node taken, checks each road out of it and lowers a neighbor's time if going through this node is faster.
+- id: finalized-why
+  idea: Explains a node's time is final once it's taken from the queue, because times are never negative, so no later path can be shorter.
+- id: cost
+  idea: O((V + E) log V) with a binary heap.
+reference_solution: |
+  Set dist[depot] = 0, everything else infinity, and push the depot into a min-priority queue. Repeatedly pop the node with the smallest dist (skip it if it's an outdated entry). For each road to a neighbor, if dist[node] + time < dist[neighbor], update dist[neighbor] and push it. When the queue is empty, dist holds the fastest times.
+time_complexity: O((V + E) log V)
+space_complexity: O(V)

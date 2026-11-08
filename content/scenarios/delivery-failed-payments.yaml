@@ -1,0 +1,20 @@
+id: delivery-failed-payments
+pattern: sliding-window
+title: Longest stretch with few failed payments
+prompt: |
+  A delivery app logs one entry per minute saying whether that minute's payments all succeeded or at least one failed. Find the longest stretch of consecutive minutes that contains at most three failed minutes. The log has millions of entries, so checking every possible stretch is too slow.
+rubric:
+- id: contiguous-range
+  idea: Represents the stretch as a range with a left and a right end.
+- id: expand-right
+  idea: Moves the right end forward one minute at a time and keeps a running count of failed minutes in the range.
+- id: shrink-left
+  idea: When the count goes above three, moves the left end forward, decreasing the count when a failed minute leaves, until the count is three again.
+- id: track-best
+  idea: After each step, records the length of the current range if it's the longest valid one seen.
+- id: linear-time
+  idea: Each minute enters the range once and leaves at most once, so the whole thing is linear rather than checking all pairs.
+reference_solution: |
+  Keep left = 0 and failures = 0. For each right from 0 to n - 1: if minute right failed, add one to failures. While failures > 3, if minute left failed subtract one, then move left forward. The range left..right is now valid, so update best with right - left + 1. Both ends only move forward, so the work is linear.
+time_complexity: O(n)
+space_complexity: O(1)

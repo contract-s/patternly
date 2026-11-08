@@ -1,0 +1,20 @@
+id: ticket-priority-many-duplicates
+pattern: quicksort
+title: In-place sort with lots of repeated values
+prompt: |
+  A support system sorts millions of tickets in place by priority, which is a number from 1 to 5. The current in-place sort, which splits around a chosen value into 'smaller' and 'not smaller', becomes extremely slow on this data. Explain why, and describe an in-place sort that stays fast.
+rubric:
+- id: diagnose
+  idea: Explains that with so many equal values, splitting into two parts leaves almost everything on one side, so it degrades toward O(n^2).
+- id: pivot
+  idea: Still picks a pivot value per range.
+- id: three-groups
+  idea: Partitions each range into smaller than, equal to, and greater than the pivot in one pass.
+- id: skip-equal
+  idea: Recurses only on the smaller and greater parts, never on the equal block, since it's already in place.
+- id: cost
+  idea: Explains this is fast when there are few distinct values (close to linear here) and O(n log n) on average in general.
+reference_solution: |
+  Equal keys all land on one side of a two-way split, so the split is lopsided. Use a three-way partition with a random pivot: low, mid, high pointers; values below the pivot are swapped to low, values above are swapped to high, equal values stay in the middle. Then recurse only on the below and above parts. With five distinct priorities, there are only a few levels of real work.
+time_complexity: O(n log n) average; O(n x distinct values) here
+space_complexity: O(log n)

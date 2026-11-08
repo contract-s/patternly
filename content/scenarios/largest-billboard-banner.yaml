@@ -1,0 +1,22 @@
+id: largest-billboard-banner
+pattern: monotonic-stack
+title: Biggest banner across a row of buildings
+prompt: |
+  A city wants to hang one rectangular banner across a row of buildings. The banner's bottom sits at street level and it can't go higher than any building it covers. Given the building heights in order (all the same width), find the largest banner area.
+rubric:
+- id: width-bounds
+  idea: Realizes that for each building used as the banner's height, the banner extends until the nearest shorter building on each side.
+- id: increasing-stack
+  idea: Keeps a stack of buildings with increasing heights.
+- id: pop-finds-right
+  idea: When a shorter building arrives, every taller building popped has found its right boundary.
+- id: left-from-stack
+  idea: The popped building's left boundary is the building now on top of the stack (or the start if it's empty).
+- id: flush-end
+  idea: Handles leftover buildings at the end, for example with a height-0 sentinel.
+- id: linear
+  idea: 'Each building is pushed and popped once: O(n).'
+reference_solution: |
+  Add a height-0 building at the end. Walk with a stack of indexes. At index i, while the stack top is taller than height[i], pop it as top; its width is i if the stack is now empty, else i - stack_top - 1; area = height[top] x width; keep the max. Then push i.
+time_complexity: O(n)
+space_complexity: O(n)

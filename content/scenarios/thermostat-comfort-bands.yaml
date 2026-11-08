@@ -1,0 +1,22 @@
+id: thermostat-comfort-bands
+pattern: dutch-national-flag
+title: Grouping sensor readings into comfort bands
+prompt: |
+  A building stores today's temperature readings in one big array. For a heat-map export, rearrange the array in place so every reading below 18 C comes first, then every reading from 18 to 22 C, then every reading above 22 C. Memory on the controller is tight, so you can't copy the array, and it should take a single pass.
+rubric:
+- id: classify-three
+  idea: Treats each reading as one of three groups by comparing it with the two thresholds.
+- id: three-pointers
+  idea: Keeps a boundary for the end of the low group, a boundary for the start of the high group, and a scanning pointer between them.
+- id: low-swap-advance
+  idea: A low reading is swapped to the low boundary and both the low boundary and scanner advance.
+- id: high-swap-recheck
+  idea: A high reading is swapped to the high boundary, which moves inward, and the scanner stays put to check the swapped-in reading.
+- id: middle-skip
+  idea: A middle-band reading is left in place and the scanner just moves on.
+- id: linear-in-place
+  idea: 'Each reading is looked at a constant number of times: O(n) time and O(1) extra space.'
+reference_solution: |
+  Use low, mid, high pointers starting at 0, 0, n - 1. While mid <= high, look at reading[mid]: below 18, swap with reading[low] and advance low and mid; 18 to 22, advance mid; above 22, swap with reading[high] and decrement high without advancing mid. When mid passes high, the array is grouped.
+time_complexity: O(n)
+space_complexity: O(1)
