@@ -16,6 +16,10 @@ rubric:
   idea: If the order ends up shorter than the number of courses, there's a prerequisite loop and no plan exists.
 - id: cost
   idea: O(V + E).
+hints:
+- Which courses can a student take on day one, before anything else?
+- Courses with no prerequisites can be taken first. Once a course is taken, some other courses have one fewer prerequisite left. Keep track of how many unmet prerequisites each course has.
+- Keep a line of courses whose count is zero. Take one, add it to the plan, and lower the count of every course that needed it, adding any that hit zero to the line. If the plan ends up missing some courses, what does that tell you about their prerequisites?
 reference_solution: |
   Build the graph and count incoming edges per course. Put every course with count 0 in a queue. Repeatedly remove one, append it to the plan, and decrement the counts of the courses that depend on it, queueing any that reach 0. If the plan has every course, return it; otherwise the remaining courses are in a loop.
 time_complexity: O(V + E)

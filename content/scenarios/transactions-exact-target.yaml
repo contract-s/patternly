@@ -16,6 +16,10 @@ rubric:
   idea: Explains that because refunds are negative, growing and shrinking a range doesn't work, since adding an item can lower the sum.
 - id: cost
   idea: O(n) time.
+hints:
+- Refunds are negative, so adding a transaction can make a stretch's sum go down. Why does that break the idea of growing and shrinking a stretch until it hits T?
+- Keep track of the total so far from the start of the day. The sum of any stretch equals the total so far at its end minus the total so far just before its start.
+- A stretch ending here sums to T when some earlier total-so-far equals (current total - T). Keep a hash map counting how many times each total-so-far has appeared, and look that up as you go. What should the map hold before the first transaction?
 reference_solution: |
   Keep counts = {0: 1}, total = 0, answer = 0. For each transaction, add it to total, add counts[total - T] (if present) to answer, then increment counts[total]. Every earlier total equal to total - T marks the start of a stretch that ends here and sums to T.
 time_complexity: O(n)

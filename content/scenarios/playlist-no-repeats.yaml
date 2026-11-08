@@ -14,6 +14,10 @@ rubric:
   idea: Updates the best length after each new song is added.
 - id: linear-time
   idea: Each play is added and removed at most once, giving O(n) time.
+hints:
+- You want the longest unbroken run of plays. When a run gets ruined by a repeat, do you really need to start over from scratch?
+- Keep a run with a left and right end, plus a way to instantly check whether a song is already inside it.
+- When the next song is already in the run, slide the left end just past that song's earlier play. Remembering the last position each song was played lets you jump straight there. Update the best length after every song.
 reference_solution: |
   Keep a map from song ID to the last index it was played, and left = 0. For each right: if the song at right was last played at an index >= left, move left to that index + 1. Record the song's index as right and update best with right - left + 1.
 time_complexity: O(n)

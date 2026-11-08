@@ -16,6 +16,10 @@ rubric:
   idea: A middle-band reading is left in place and the scanner just moves on.
 - id: linear-in-place
   idea: 'Each reading is looked at a constant number of times: O(n) time and O(1) extra space.'
+hints:
+- Every reading falls into exactly one of three bands. Which band belongs at the very start of the array and which at the very end?
+- Grow the low band from the left edge and the high band from the right edge, and scan the unsorted readings in between with a third pointer.
+- 'Low reading: swap it to the left boundary and move both that boundary and the scanner forward. High reading: swap it to the right boundary and move only that boundary inward, because the reading you just swapped in hasn''t been checked. When can you stop?'
 reference_solution: |
   Use low, mid, high pointers starting at 0, 0, n - 1. While mid <= high, look at reading[mid]: below 18, swap with reading[low] and advance low and mid; 18 to 22, advance mid; above 22, swap with reading[high] and decrement high without advancing mid. When mid passes high, the array is grouped.
 time_complexity: O(n)

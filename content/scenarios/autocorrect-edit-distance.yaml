@@ -16,6 +16,10 @@ rubric:
   idea: Fills the table row by row so each cell's three neighbors are already done.
 - id: cost
   idea: O(m x n) time for words of length m and n.
+hints:
+- Look only at the last letter of each word. If they match, what's left to fix? If they don't, what are the three things you could do with that last letter?
+- Define a value for 'edits to turn the first i letters of the typed word into the first j letters of the target.' Each choice (insert, delete, replace) leaves you with a slightly smaller version of the same question.
+- Fill a table where each cell uses the cell diagonally up-left (match or replace), the cell above (delete), and the cell to the left (insert), taking the cheapest. What's in the first row and first column, where one word is empty?
 reference_solution: |
   Build an (m + 1) x (n + 1) table. Fill the first column with 0..m and the first row with 0..n. For each i, j: if typed[i-1] == target[j-1], copy d[i-1][j-1]; otherwise take 1 + min of the cell above, the cell to the left, and the diagonal. The answer is d[m][n]. Only the previous row is needed if memory matters.
 time_complexity: O(m x n)

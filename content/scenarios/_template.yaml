@@ -11,6 +11,10 @@ rubric:                        # the hidden checklist of key ideas
     idea: One key idea a good explanation must contain.
   - id: second-key-idea
     idea: Another key idea.
+hints:                         # exactly 3, shown one at a time; each builds on the last
+  - A nudge: what should the learner notice about the problem?
+  - The shape of the approach, without naming the pattern.
+  - A strong clue about the key step. Still no pattern name.
 reference_solution: |
   Your plain-words solution that hits every rubric item.
 time_complexity: O(?)

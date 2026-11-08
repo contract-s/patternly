@@ -16,6 +16,10 @@ rubric:
   idea: Reads the median from the top of the bigger half, or averages the two tops when the sizes are equal.
 - id: cost
   idea: O(log n) per new value and O(1) to read the median.
+hints:
+- The median splits the values into a smaller half and a larger half. Which values in each half do you actually need to look at to find it?
+- You only need the biggest value in the lower half and the smallest value in the upper half. Keep the two halves in structures that give you those instantly.
+- Keep the lower half in a structure with its largest on top and the upper half in one with its smallest on top. Put each new value in the correct half, then move a top across if one half gets more than one bigger than the other. Where do you read the median from when the sizes are equal?
 reference_solution: |
   Keep a max-heap low and a min-heap high. Insert into low if the value <= low's top (or low is empty), else into high. If one heap has two more items than the other, pop its top and push it into the other. The median is the top of the larger heap, or the average of both tops when they're equal in size.
 time_complexity: O(log n) per insert

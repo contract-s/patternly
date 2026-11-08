@@ -14,6 +14,10 @@ rubric:
   idea: If the candidate works, tries smaller (keeping it as a possible answer); if it doesn't, tries larger.
 - id: cost
   idea: 'O(n log W) where W is the total weight: a linear check per step, with a logarithmic number of steps.'
+hints:
+- 'Try flipping the question: if someone hands you a capacity, can you check quickly whether it finishes within D days?'
+- To check a capacity, load parcels in order and start a new day whenever the next one won't fit. What's the smallest possible capacity, and the largest you'd ever need?
+- If a capacity works, every bigger capacity also works. So the 'works?' answer flips once between the heaviest parcel and the total weight. Test the middle capacity and keep the half that could still hold the smallest working value.
 reference_solution: |
   The answer lies between max(weight) and sum(weight). For a capacity c, count days by loading parcels in order and starting a new day when the next one won't fit; c works if days <= D. Since bigger capacities never take more days, binary search: if mid works set high = mid, else low = mid + 1. Return low.
 time_complexity: O(n log W)

@@ -16,6 +16,10 @@ rubric:
   idea: Explains that the same smaller amounts are reused many times, and that greedy can be wrong, so trying all last stamps is needed.
 - id: cost
   idea: O(A x number of stamp values) time.
+hints:
+- 'Taking the biggest stamp first fails, as the 14-cent example shows. Think about the last stamp on the parcel: what could it be?'
+- If the last stamp is worth s, the rest of the stamps make exactly A - s cents. So the best answer for A depends on best answers for smaller amounts. Try defining best[a] as the fewest stamps for exactly a cents.
+- best[a] = 1 + the smallest best[a - s] over every stamp s that fits. Start from best[0] = 0, mark amounts that can't be made as impossible, and fill amounts from small to large so smaller answers are ready. What's the total work?
 reference_solution: |
   Make an array best of size A + 1, with best[0] = 0 and everything else infinity. For a from 1 to A, for each stamp s <= a, set best[a] = min(best[a], best[a - s] + 1). The answer is best[A], or impossible if it's still infinity. Keep the chosen stamp per amount to print the stamps.
 time_complexity: O(A x k)

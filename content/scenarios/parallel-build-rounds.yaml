@@ -16,6 +16,10 @@ rubric:
   idea: The number of rounds is the answer, which equals the longest chain of dependencies.
 - id: cycle-detect
   idea: If modules are left that never reach zero, there's a dependency loop.
+hints:
+- With unlimited machines, which modules can start compiling right away in the first round?
+- Round 1 is every module with no dependencies. Finishing a round unblocks some modules. Track how many unbuilt dependencies each module still has.
+- After each round, lower the counts of modules that depended on what was just built. Every module that reaches zero goes into the next round together. Count rounds until nothing is ready. If some modules never reach zero, what's wrong with the dependencies?
 reference_solution: |
   Compute dependency counts. Round 1 is every module with count 0. For each module in the current round, decrement the counts of modules that depend on it; the ones that reach 0 form the next round. Repeat until no modules are ready. The number of rounds is the answer if every module was built; otherwise report a loop.
 time_complexity: O(V + E)

@@ -16,6 +16,10 @@ rubric:
   idea: Explains that always picking the first or last item is O(n^2) on nearly sorted input, and a random pivot avoids that.
 - id: cost
   idea: O(n log n) on average, in place, with O(log n) recursion stack if it recurses on the smaller side first.
+hints:
+- Pick one score. Can you rearrange the array, in place, so that score ends up exactly where it belongs in the sorted order?
+- Put every score smaller than your chosen one on its left and every larger score on its right. Now that score is in its final spot, and the left and right parts are just smaller versions of the same problem.
+- How you pick that score matters. If you always pick the first or last entry and the data is already nearly sorted, one side is almost empty every time. What does that cost, and how would picking at random help? To keep memory small, which side should you handle first?
 reference_solution: |
   Pick a random index in the range and swap it to the end as the pivot. Walk the range keeping a boundary: each value smaller than the pivot is swapped to just after the boundary. Swap the pivot into the slot after the boundary, where it now belongs. Recurse on the left and right parts. Recursing on the smaller part first and looping on the larger keeps the stack at O(log n).
 time_complexity: O(n log n) average, O(n^2) worst

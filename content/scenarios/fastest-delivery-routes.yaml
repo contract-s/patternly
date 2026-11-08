@@ -16,6 +16,10 @@ rubric:
   idea: Explains a node's time is final once it's taken from the queue, because times are never negative, so no later path can be shorter.
 - id: cost
   idea: O((V + E) log V) with a binary heap.
+hints:
+- Out of all the places you haven't settled yet, which one can you be sure you already know the fastest time for?
+- The closest unsettled place is safe to settle, because every other route to it would go through somewhere at least as far away, and travel times are never negative. Settle it, then see what it improves.
+- Start the depot at 0 and everything else at infinity. Repeatedly take the unsettled place with the smallest time (a structure that always hands you the minimum helps), and for each road out of it, lower the neighbor's time if going through here is faster. Why would negative road times break this?
 reference_solution: |
   Set dist[depot] = 0, everything else infinity, and push the depot into a min-priority queue. Repeatedly pop the node with the smallest dist (skip it if it's an outdated entry). For each road to a neighbor, if dist[node] + time < dist[neighbor], update dist[neighbor] and push it. When the queue is empty, dist holds the fastest times.
 time_complexity: O((V + E) log V)

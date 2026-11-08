@@ -16,6 +16,10 @@ rubric:
   idea: At the end, checks whether any unpatched server is left and returns -1 if so.
 - id: linear-cells
   idea: 'O(rows x columns): every cell is queued at most once.'
+hints:
+- The patch spreads outward one step per minute from every patched server at once. What does the set of servers patched after one minute look like? After two?
+- Start with all initially patched servers together, not one at a time. Then spread to their unpatched neighbors, then to those servers' neighbors, and so on.
+- Put every patched server in a first-in, first-out line, then process the line one 'round' at a time, where each round is one minute. Mark servers patched when you add them. At the end, how do you know if some server was never reached?
 reference_solution: |
   Queue every patched server and count the unpatched ones. Then, while the queue has items and servers are still unpatched, take every item currently queued (one minute's worth), patch their unpatched neighbors, queue those, and add one to minutes. When the loop ends, return minutes if none are left unpatched, else -1.
 time_complexity: O(rows x cols)

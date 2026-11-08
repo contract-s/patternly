@@ -16,6 +16,10 @@ rubric:
   idea: Days still on the stack at the end never got a warmer day, so their answer is 0.
 - id: linear
   idea: Each day is pushed and popped at most once, so O(n).
+hints:
+- Go through the days in order. When a warm day arrives, which earlier days just found their answer?
+- Keep a list of days still waiting for a warmer day. Notice that the waiting days' temperatures always go down from oldest to newest. Why?
+- Keep those waiting days on a stack. When today is warmer than the day on top, pop it and record the gap in days, and keep popping while today is still warmer. Then push today. What do days still on the stack at the end get? How many times is each day pushed or popped?
 reference_solution: |
   Walk the days in order with a stack of indexes. For day i, while the stack isn't empty and temp[i] is greater than temp at the top, pop the top j and set answer[j] = i - j. Push i. Anything left at the end keeps answer 0.
 time_complexity: O(n)

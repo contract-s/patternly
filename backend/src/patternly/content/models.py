@@ -35,6 +35,9 @@ class Scenario(Strict):
     title: str = Field(min_length=1)
     prompt: str = Field(min_length=1)
     rubric: list[RubricItem] = Field(min_length=1)
+    # Exactly three hints, revealed one at a time. Each builds on the last, from a nudge
+    # to a strong clue, and none may name the pattern.
+    hints: list[str] = Field(min_length=3, max_length=3)
     reference_solution: str = Field(min_length=1)
     time_complexity: str = Field(min_length=1)
     space_complexity: str = Field(min_length=1)

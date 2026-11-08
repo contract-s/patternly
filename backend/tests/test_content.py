@@ -185,3 +185,21 @@ def test_find_content_dir_walks_up(content_dir, monkeypatch):
     assert find_content_dir(nested) == content_dir.root
     monkeypatch.setenv("PATTERNLY_CONTENT", "/elsewhere")
     assert str(find_content_dir(nested)) == "/elsewhere"
+
+
+def test_hint_naming_pattern_is_an_error(content_dir):
+    content_dir.patterns([{"id": "p", "name": "Hidden Trick", "aliases": ["the trick"]}])
+    s = scenario("s", "p")
+    s["hints"][2] = "Now apply the trick to each element."
+    content_dir.scenario(s)
+    content_dir.answers(answer_set("s"))
+    assert any("hint 3 names the pattern ('the trick')" in e for e in errors(content_dir))
+
+
+@pytest.mark.parametrize("n", [2, 4])
+def test_exactly_three_hints(content_dir, n):
+    content_dir.patterns([{"id": "p", "name": "P"}])
+    s = scenario("s", "p")
+    s["hints"] = [f"Hint {i}." for i in range(n)]
+    content_dir.scenario(s)
+    assert any("[hints]" in e for e in errors(content_dir))

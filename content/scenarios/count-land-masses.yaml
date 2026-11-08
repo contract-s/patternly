@@ -16,6 +16,10 @@ rubric:
   idea: Marks cells visited (or flips them to water) so a land mass isn't counted twice.
 - id: linear-cells
   idea: O(rows x columns), since each cell is visited a constant number of times.
+hints:
+- A land mass is a group of land cells that all connect to each other. If you're standing on one land cell, how would you find every cell in its group?
+- Scan the grid. Each time you find land you haven't seen before, that's a new land mass, so count it and then visit all the land connected to it.
+- From a land cell, visit each of its four neighbors that's unvisited land, and from those visit their neighbors, going as far as you can (recursion works well). Mark cells as visited so the rest of the scan skips them. How many times is each cell touched?
 reference_solution: |
   Loop over every cell. When you hit land that isn't visited, add one to the count and run a recursive explore from it: mark the cell visited, then explore each of its four neighbors that is unvisited land. When the explore returns, the whole land mass is marked, so later cells from it are skipped.
 time_complexity: O(rows x cols)

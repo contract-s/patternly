@@ -16,6 +16,10 @@ rubric:
   idea: Stops when the scan pointer passes the back boundary, because nothing unknown is left.
 - id: linear-in-place
   idea: One pass, O(n) time, and only a few indexes of extra space.
+hints:
+- You can't set packages aside, so think about which parts of the conveyor are already 'finished' as you go. Where should a REFUND package end up, and where should a RESTOCK package end up?
+- 'Try keeping three markers: one for where the next REFUND goes (front), one for where the next RESTOCK goes (back), and one scanning the packages in between that you haven''t looked at yet.'
+- When the scanner finds a RESTOCK package and swaps it with the back marker, a package you've never looked at lands under the scanner. Should the scanner move forward after that swap, or check this new package first?
 reference_solution: |
   Keep three indexes: low = 0, mid = 0, high = n - 1. Slots before low are REFUND, slots from low up to mid are REPAIR, slots after high are RESTOCK, and mid..high is unchecked. While mid <= high: if slot mid is REFUND, swap it with low and move both low and mid forward; if REPAIR, just move mid forward; if RESTOCK, swap it with high and move high back, but leave mid where it is so the swapped-in package gets checked. Each step shrinks the unchecked part by one, so it's one pass with no extra storage.
 time_complexity: O(n)

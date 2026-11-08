@@ -34,6 +34,9 @@ def check(content: Content) -> list[Issue]:
             for phrase in (pattern.name, *pattern.aliases):
                 if _mentions(s.prompt, phrase) or _mentions(s.title, phrase):
                     issues.append(Issue("warning", where, f"title or prompt names the pattern ('{phrase}')"))
+                for n, hint in enumerate(s.hints, start=1):
+                    if _mentions(hint, phrase):
+                        issues.append(Issue("error", where, f"hint {n} names the pattern ('{phrase}')"))
         if sid not in content.answer_sets:
             issues.append(Issue("warning", where, "no answers file yet"))
 

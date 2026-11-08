@@ -14,6 +14,10 @@ rubric:
   idea: Uses union-find to track and merge groups efficiently.
 - id: stop-at-k
   idea: Stops merging when exactly k groups remain, and explains that the next unused edge is the gap between groups, which is as large as possible.
+hints:
+- Imagine every customer starting in their own group. Which two customers is it most natural to put together first?
+- Keep joining the closest pair of customers who are in different groups. Each join reduces the number of groups by one. When should you stop?
+- Sort all pairs by distance and walk them from closest up, merging groups with a union-find structure. Stop when exactly k groups remain. Why is the next pair you would have merged now the smallest gap between groups, and why is that gap as large as it can be?
 reference_solution: |
   Start with every customer alone. Sort pairs by distance and walk them from closest up; when a pair spans two groups, merge those groups with union-find. Each merge reduces the group count by one; stop when k groups are left. Because you merged the closest pairs first, the remaining cross-group distances are the largest possible.
 time_complexity: O(E log E)

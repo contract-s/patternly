@@ -14,6 +14,10 @@ rubric:
   idea: After each step, records the length of the current range if it's the longest valid one seen.
 - id: linear-time
   idea: Each minute enters the range once and leaves at most once, so the whole thing is linear rather than checking all pairs.
+hints:
+- The answer is one unbroken run of minutes. Instead of trying every start and end, could you reuse work as the run's end moves forward?
+- Keep a run with a left end and a right end, and a count of failed minutes inside it. Move the right end forward one minute at a time.
+- When the count goes over three, the run is invalid. Move the left end forward until enough failed minutes have left. After every step the run is valid, so compare its length to the best so far. How many times can each minute enter or leave the run?
 reference_solution: |
   Keep left = 0 and failures = 0. For each right from 0 to n - 1: if minute right failed, add one to failures. While failures > 3, if minute left failed subtract one, then move left forward. The range left..right is now valid, so update best with right - left + 1. Both ends only move forward, so the work is linear.
 time_complexity: O(n)

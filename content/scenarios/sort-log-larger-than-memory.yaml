@@ -16,6 +16,10 @@ rubric:
   idea: Explains that every run is read front to back, so the disk access is sequential.
 - id: cost
   idea: O(n log n) comparisons overall, with the data read and written only a couple of times.
+hints:
+- You can only hold 4 GB at a time. What can you do with 4 GB of the log on its own?
+- Sort each 4 GB piece in memory and write it back to disk. Now you have about 50 sorted files. How do you combine sorted lists into one sorted list?
+- Read all the sorted files from the front at the same time. The next record in the output is the smallest of their current front records. A structure that always gives you the minimum of about 50 items makes this fast. Why does this only ever read the disk sequentially?
 reference_solution: |
   Read about 4 GB at a time, sort it in memory, and write it out as a sorted run, giving about 50 runs. Then open all runs, keep a small read buffer for each, and put each run's first record in a min-heap. Pop the smallest, write it to the output, and push the next record from the same run. Every file is read sequentially.
 time_complexity: O(n log n)

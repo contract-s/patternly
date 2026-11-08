@@ -16,6 +16,10 @@ rubric:
   idea: Is done after laying n - 1 cables for n towns.
 - id: cost
   idea: O(E log E), dominated by sorting the cables.
+hints:
+- If the network ever has a loop, one cable in that loop could be removed and every town would still be connected. What does that say about the cheapest network?
+- 'Consider cables from cheapest to most expensive and be greedy: lay a cable unless it''s useless. When is a cable useless?'
+- A cable is useless if its two towns are already connected through cables you've laid. Keep a structure that tracks which towns are in the same group and can merge two groups quickly (union-find). How many cables are needed for n towns?
 reference_solution: |
   Sort cables by price. Put every town in its own group in a union-find structure. For each cable from cheapest up, if its two towns are in different groups, lay it and merge the groups; otherwise skip it because it would make a loop. Stop after n - 1 cables are laid. Taking the cheapest safe cable each time gives the minimum total.
 time_complexity: O(E log E)

@@ -16,6 +16,10 @@ rubric:
   idea: Records the current combination when the total equals the card amount exactly.
 - id: cost
   idea: Notes the worst case is exponential (up to 2^n subsets), and that pruning is what makes it practical.
+hints:
+- Think of building a combination by deciding, item by item, whether to add it. What do you do when the total goes over the card amount?
+- Add an item, keep choosing more, and when you've explored everything after that choice, take the item back out and try the next one. Save the combination when the total hits the amount exactly.
+- To avoid listing the same set in different orders, only consider items after the last one you picked. If prices are sorted, the moment one item is too expensive, every later item is too, so you can stop that loop. What's the worst case number of combinations?
 reference_solution: |
   Sort prices. Recurse with (start index, remaining amount, current list). If remaining is 0, save a copy of the list. Otherwise for each i from start on: if price[i] > remaining, break, since later prices are bigger; else add item i, recurse with i + 1 and remaining - price[i], then remove item i.
 time_complexity: O(2^n) worst case

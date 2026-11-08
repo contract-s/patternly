@@ -16,6 +16,10 @@ rubric:
   idea: Answers with the largest of those shortest delays, since that's when the last server gets it.
 - id: unreachable
   idea: Returns -1 if any server's delay is still infinity.
+hints:
+- When does one particular server receive the update? Think about the delays along the different routes from the source to it.
+- Each server gets the update at its fastest-route delay from the source. So first find the fastest delay to every server, then decide what single number answers the question.
+- Grow fastest-known delays outward from the source, always finalizing the server with the smallest current delay next and updating its neighbors through its links. The answer is the largest of the final delays. What do you return if a delay never gets set?
 reference_solution: |
   Run the closest-first search: dist[source] = 0, others infinity, a min-priority queue of (delay, server). Pop the smallest, skip outdated entries, and relax each link. After the queue empties, if any dist is infinity return -1, otherwise return the maximum dist.
 time_complexity: O((V + E) log V)

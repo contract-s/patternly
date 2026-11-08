@@ -16,6 +16,10 @@ rubric:
   idea: Stores which station each one was reached from, and walks those links back to rebuild the route.
 - id: linear-graph
   idea: 'Runs in O(V + E): each station and connection is handled once.'
+hints:
+- Every hop costs the same. Think about which stations you can reach in one hop, then in two hops, and so on.
+- Explore stations in order of hop count, finishing every station one hop away before any station two hops away. Which data structure gives you first-in, first-out order?
+- Mark a station as seen when you add it so it's never added twice, and remember which station you reached it from. The first time the destination comes up, why is that route guaranteed to have the fewest hops, and how do you rebuild it?
 reference_solution: |
   Put the origin in a queue with distance 0 and mark it visited. Repeatedly take the front station; for each unvisited neighbor, mark it, record its parent and distance + 1, and add it to the back. Stop when the destination is taken off the queue; follow parents back to the origin for the route. Equal hop costs mean this order reaches every station by a fewest-hop path.
 time_complexity: O(V + E)

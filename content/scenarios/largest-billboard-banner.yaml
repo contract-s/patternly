@@ -16,6 +16,10 @@ rubric:
   idea: Handles leftover buildings at the end, for example with a height-0 sentinel.
 - id: linear
   idea: 'Each building is pushed and popped once: O(n).'
+hints:
+- Suppose you decide which building sets the banner's height. How far left and right can the banner stretch at that height?
+- With a given building as the shortest one covered, the banner extends until it hits a shorter building on each side. So for every building you need the nearest shorter building on the left and on the right.
+- Keep a stack of buildings with increasing heights. When a shorter building arrives, each taller building you pop has found its right edge, and the building left on top of the stack is its left edge. Compute the area as you pop. How do you handle buildings still on the stack at the end?
 reference_solution: |
   Add a height-0 building at the end. Walk with a stack of indexes. At index i, while the stack top is taller than height[i], pop it as top; its width is i if the stack is now empty, else i - stack_top - 1; area = height[top] x width; keep the max. Then push i.
 time_complexity: O(n)

@@ -16,6 +16,10 @@ rubric:
   idea: Marks a cell finished after all the cells it reads are explored, and skips finished cells later, which keeps it linear.
 - id: linear-graph
   idea: Runs in O(V + E).
+hints:
+- Draw each cell as a dot with an arrow to every cell its formula reads. What does a circular reference look like in that drawing?
+- Follow arrows from a cell as far as they go. A loop exists if, while following a path, you arrive back at a cell that's still on the path you're currently following.
+- 'Give each cell one of three states: not visited, in progress (on the current path), and done. Reaching an in-progress cell means a loop. Mark a cell done only after everything it reads has been explored, and skip done cells later. Why does that keep the work linear?'
 reference_solution: |
   Give every cell a state: unvisited, visiting, done. For each unvisited cell, explore: set it to visiting, and for each cell it reads, if that cell is visiting there's a loop; if unvisited, explore it. When all of its references are handled, set it to done. If no exploration ever hits a visiting cell, there's no loop.
 time_complexity: O(V + E)

@@ -25,6 +25,7 @@ def scenario(sid: str, pattern: str, prompt: str = "Placeholder prompt text.") -
         "title": f"Placeholder {sid}",
         "prompt": prompt,
         "rubric": [{"id": "idea-a", "idea": "First idea."}, {"id": "idea-b", "idea": "Second idea."}],
+        "hints": ["Placeholder nudge.", "Placeholder shape.", "Placeholder clue."],
         "reference_solution": "Placeholder solution.",
         "time_complexity": "O(n)",
         "space_complexity": "O(1)",

@@ -14,6 +14,10 @@ rubric:
   idea: 'Explains why the collection keeps the smallest on top: that''s the one to compare against and evict.'
 - id: cost
   idea: O(n log k) for n distinct hashtags and k = 10, versus O(n log n) to sort everything.
+hints:
+- You need the top 10, not a full ranking. Once you have counts for every hashtag, do you need to sort millions of them?
+- Walk the counts while keeping only your current top 10. For each new hashtag, what's the one member of your top 10 you need to compare it against?
+- Compare against the weakest of your top 10, and swap it out if the new hashtag beats it. A structure that always keeps the smallest item on top and inserts or removes in log time is ideal. What does this cost compared to sorting everything?
 reference_solution: |
   Count every hashtag in a hash map. Then walk the counts with a min-heap capped at 10: push while it has fewer than 10; after that, if a count is larger than the heap's top, pop the top and push the new one. At the end the heap holds the top 10; sort those 10 for display.
 time_complexity: O(n log k)
