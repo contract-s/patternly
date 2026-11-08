@@ -1,0 +1,67 @@
+scenario: delivery-failed-payments
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: I'd keep a window with a left and right pointer over the minutes and a counter of how many failed minutes are inside it. Move right forward one minute at a time; if that minute failed, bump the counter. If the counter goes over 3, move left forward, decrementing when a failed minute drops out, until it's back to 3. After each step the window is valid, so compare right - left + 1 to the best. Each minute gets added once and removed at most once, so it's O(n).
+  labels:
+    contiguous-range: hit
+    expand-right: hit
+    shrink-left: hit
+    track-best: hit
+    linear-time: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Use two pointers, left and right. Move right through the log and count failures. When there are too many failures, start over from the next minute after left. Keep track of the longest stretch you found.
+  labels:
+    contiguous-range: hit
+    expand-right: hit
+    shrink-left: miss
+    track-best: hit
+    linear-time: miss
+  notes: Restarting instead of sliding the left end only past enough failures; no reasoning about cost.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Keep a range from left to right and count failed minutes in it. Push right forward and add to the count when the minute failed. When the count goes past 3, move left forward one step at a time, lowering the count when a failed minute leaves, until there are 3 again. Each minute is added and removed once so it's linear.
+  labels:
+    contiguous-range: hit
+    expand-right: hit
+    shrink-left: hit
+    track-best: miss
+    linear-time: hit
+  notes: 'Never says where the answer comes from: no tracking of the longest valid range.'
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Sort the minutes so the failed ones are grouped together, then the successful minutes are all in one block and you can take that block plus three failures. Sorting is O(n log n) which is fine for millions of entries.
+  labels:
+    contiguous-range: miss
+    expand-right: miss
+    shrink-left: miss
+    track-best: miss
+    linear-time: miss
+  notes: Sorting destroys the order, so the stretch is no longer consecutive minutes.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: You'd scan the log and keep track of the failures as you go, and look for the longest part that doesn't have too many. It should be pretty fast since you only go through it once.
+  labels:
+    contiguous-range: miss
+    expand-right: miss
+    shrink-left: miss
+    track-best: miss
+    linear-time: miss
+  notes: Right flavor but no range, no shrinking rule, no reason it's one pass.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Write down the positions of all the failed minutes in a list, with a fake failure at -1 before the start and at n after the end. Any valid stretch can contain failures i+1 through i+3 and must stop just before failure i+4 and start just after failure i. So the best is the max over i of fail[i+4] - fail[i] - 1. If there are 3 or fewer failures total, the whole log works. That's one pass to collect positions and one pass over them, so O(n).
+  labels:
+    contiguous-range: miss
+    expand-right: miss
+    shrink-left: miss
+    track-best: hit
+    linear-time: hit
+  notes: Valid O(n) approach using gaps between failures instead of a moving range.

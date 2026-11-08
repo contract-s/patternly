@@ -1,0 +1,73 @@
+scenario: spreadsheet-circular-reference
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: 'Make a directed graph: each cell points to the cells its formula reads. Each cell is either unvisited, in progress, or done. For every unvisited cell, start a recursive walk: mark it in progress, then walk into each cell it reads. If I reach a cell that''s in progress, that''s a loop, because I came back to something on my current path. When all of a cell''s references are done, mark it done, and later walks skip done cells. Every cell and reference is handled once, so O(V + E).'
+  labels:
+    directed-graph: hit
+    explore-each: hit
+    three-states: hit
+    back-edge-cycle: hit
+    finished-skip: hit
+    linear-graph: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Turn the formulas into a graph where each cell points to the cells it uses. Then from each cell, follow the references, and if you ever see a cell you've already visited, there's a circular reference.
+  labels:
+    directed-graph: hit
+    explore-each: hit
+    three-states: miss
+    back-edge-cycle: miss
+    finished-skip: miss
+    linear-graph: miss
+  notes: 'Plain visited set: two formulas that both read the same cell would be reported as a loop.'
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Each cell is a node with arrows to the cells it reads. Do a recursive walk from every cell that isn't done yet, marking a cell as in progress when you enter it. If you run into a cell that's in progress, you found a loop. When you finish exploring a cell, mark it done. It's O(V + E).
+  labels:
+    directed-graph: hit
+    explore-each: hit
+    three-states: hit
+    back-edge-cycle: hit
+    finished-skip: miss
+    linear-graph: miss
+  notes: Marks cells done but never skips them, so shared cells are re-explored and the O(V + E) claim doesn't hold.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Sort the cells by name, A1, A2, B1 and so on, and check whether any formula refers to a cell that comes earlier in the order. If it does, that's circular.
+  labels:
+    directed-graph: miss
+    explore-each: miss
+    three-states: miss
+    back-edge-cycle: miss
+    finished-skip: miss
+    linear-graph: miss
+  notes: Reading an earlier cell is perfectly normal; it doesn't detect loops.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Follow the formulas from cell to cell and see if you end up going in a circle. If you come back to where you started then there's a circular reference.
+  labels:
+    directed-graph: miss
+    explore-each: miss
+    three-states: miss
+    back-edge-cycle: miss
+    finished-skip: miss
+    linear-graph: miss
+  notes: Intuition only, and 'back to where you started' misses loops not through the start.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Count, for each cell, how many other cells it reads that aren't resolved yet. Cells with a count of 0 (only constants) can be resolved right away. Put them in a queue; when you resolve one, lower the count of every cell that reads it, and queue any that hit 0. If at the end some cells were never resolved, they're stuck waiting on each other, which means a loop. That's O(V + E).
+  labels:
+    directed-graph: hit
+    explore-each: miss
+    three-states: miss
+    back-edge-cycle: miss
+    finished-skip: miss
+    linear-graph: hit
+  notes: Peeling off cells with no unresolved inputs; leftovers mean a loop. Valid.

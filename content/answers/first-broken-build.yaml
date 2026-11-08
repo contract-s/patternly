@@ -1,0 +1,67 @@
+scenario: first-broken-build
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: The builds go good up to some point and broken after it, so 'is it broken' flips once. Keep low = 1 and high = 10,000. Test the middle build. If it's broken, the first broken build is that one or earlier, so set high = mid. If it's good, set low = mid + 1. Stop when low == high, and that's the first broken build. Every test halves the range, so it's about log2(10,000), around 14 test runs.
+  labels:
+    sorted-property: hit
+    test-middle: hit
+    discard-half: hit
+    boundary: hit
+    log-cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Test the build in the middle. If it's broken, look in the first half, otherwise look in the second half, and keep going until you find a broken build.
+  labels:
+    sorted-property: miss
+    test-middle: hit
+    discard-half: hit
+    boundary: miss
+    log-cost: miss
+  notes: Halving is there, but stops at any broken build instead of the first one and never says why halving is valid or how many tests.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Builds are good then broken, so it's sorted by broken-ness. Check the middle build; if broken, keep the left half, if good keep the right half. Keep halving until you've narrowed it down. That's around 14 tests instead of 10,000.
+  labels:
+    sorted-property: hit
+    test-middle: hit
+    discard-half: hit
+    boundary: miss
+    log-cost: hit
+  notes: 'Never handles the boundary: no rule that keeps a broken mid in range or that ends on the first broken build.'
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Start from the newest build and walk backward, testing each one, until you hit a build that passes. The one right after it is the first broken build. If the bug is recent this is fast.
+  labels:
+    sorted-property: hit
+    test-middle: miss
+    discard-half: miss
+    boundary: miss
+    log-cost: miss
+  notes: Linear scan; up to 10,000 runs of 20 minutes. Notices the good/broken order, so sorted-property is a hit.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: You can be smart about which builds you test instead of testing all of them, and narrow it down quickly since the broken ones are all after the good ones.
+  labels:
+    sorted-property: hit
+    test-middle: miss
+    discard-half: miss
+    boundary: miss
+    log-cost: miss
+  notes: Mentions the ordering but nothing concrete.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: 'Since everything after the first broken build is broken, test builds 1, 2, 4, 8, 16, and so on until one fails. Say build 2048 is broken and 1024 is fine. Now the first broken build is between 1025 and 2048, and I halve that range: test its middle, keep the half that still has the switch from good to broken, and stop when one build is left. That''s about 2 log n tests, around 27, still logarithmic.'
+  labels:
+    sorted-property: hit
+    test-middle: miss
+    discard-half: hit
+    boundary: hit
+    log-cost: hit
+  notes: Doubling then halving. Valid and logarithmic, though about twice the tests of plain halving.

@@ -1,0 +1,73 @@
+scenario: rural-fiber-network
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: 'We want every town connected with no loops, because any loop has a cable we could drop. Sort all the possible cables from cheapest to most expensive. Put every town in its own group using union-find. Go through the cables in order: if the two towns are in different groups, lay the cable and merge the groups; if they''re already in the same group, skip it because it would make a loop. Stop once you''ve laid n - 1 cables. Sorting dominates, so it''s O(E log E).'
+  labels:
+    spanning-framing: hit
+    sort-edges: hit
+    greedy-join: hit
+    union-find: hit
+    stop-count: hit
+    cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Sort the cables by price and keep adding the cheapest ones that don't create a loop until all the towns are connected.
+  labels:
+    spanning-framing: miss
+    sort-edges: hit
+    greedy-join: hit
+    union-find: miss
+    stop-count: miss
+    cost: miss
+  notes: Correct greedy idea, but no way to detect a loop and nothing on cost.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Connecting everything with no loops is the goal. Sort the cables cheapest first and lay each one unless it would make a loop, stopping at n - 1 cables. To tell whether a cable makes a loop, check whether there's already a path between its two towns by searching the cables laid so far.
+  labels:
+    spanning-framing: hit
+    sort-edges: hit
+    greedy-join: hit
+    union-find: miss
+    stop-count: hit
+    cost: miss
+  notes: Searching for a path on every cable makes it O(E x V), so no fast connectivity check and no valid cost.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Start at the biggest town and connect it to its nearest town, then from that town connect to its nearest town that isn't connected yet, and so on until every town is on the line.
+  labels:
+    spanning-framing: miss
+    sort-edges: miss
+    greedy-join: miss
+    union-find: miss
+    stop-count: miss
+    cost: miss
+  notes: Nearest-neighbor chain; can be much more expensive than the optimum.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Pick the cheapest cables you can while making sure every town ends up connected, and avoid laying cables you don't need.
+  labels:
+    spanning-framing: miss
+    sort-edges: miss
+    greedy-join: miss
+    union-find: miss
+    stop-count: miss
+    cost: miss
+  notes: Restates the goal.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Start from any one town. Keep a priority queue of cables leaving the connected set, keyed by price. Repeatedly take the cheapest cable that reaches a town not yet connected, lay it, and add that town's cables to the queue. Cables to towns already connected get skipped. When all n towns are in, you've laid n - 1 cables and it's the cheapest network, since every step takes the cheapest way to grow the connected set. O(E log V).
+  labels:
+    spanning-framing: hit
+    sort-edges: miss
+    greedy-join: hit
+    union-find: miss
+    stop-count: hit
+    cost: miss
+  notes: Grows one connected tree from a start town. Valid, different from sorting all edges.

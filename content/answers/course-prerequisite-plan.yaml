@@ -1,0 +1,73 @@
+scenario: course-prerequisite-plan
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: Make a directed graph with an edge from each prerequisite to the course that needs it. Count each course's prerequisites. Put every course with a count of 0 into a queue. Repeatedly take one out, add it to the plan, and subtract 1 from every course that needed it, queueing any that drop to 0. If the plan ends up with every course, that's a valid order; if some never got in, they're in a prerequisite loop and there's no plan. Each course and edge is handled once, O(V + E).
+  labels:
+    directed-graph: hit
+    indegree: hit
+    start-zero: hit
+    remove-and-update: hit
+    cycle-detect: hit
+    cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Start with the courses that have no prerequisites and take those first. Then take courses whose prerequisites you've finished, and keep going until you've taken everything.
+  labels:
+    directed-graph: miss
+    indegree: miss
+    start-zero: hit
+    remove-and-update: miss
+    cycle-detect: miss
+    cost: miss
+  notes: Right intuition, but no counts or update rule, and never handles a loop.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Build a graph from prerequisites to courses and count prerequisites per course. Queue every course with 0. Pop one, add it to the plan, and decrement the count for each course that depends on it, queueing the ones that reach 0. When the queue is empty, return the plan. O(V + E).
+  labels:
+    directed-graph: hit
+    indegree: hit
+    start-zero: hit
+    remove-and-update: hit
+    cycle-detect: miss
+    cost: hit
+  notes: Never checks whether every course made it, so it silently returns a partial plan when prerequisites loop.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Sort the courses by how many prerequisites they have, fewest first, and take them in that order.
+  labels:
+    directed-graph: miss
+    indegree: miss
+    start-zero: miss
+    remove-and-update: miss
+    cycle-detect: miss
+    cost: miss
+  notes: A course with one prerequisite can depend on a course with three; ordering by count doesn't respect dependencies.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Figure out which courses depend on which and take them in an order where you always have the prerequisites done first.
+  labels:
+    directed-graph: miss
+    indegree: miss
+    start-zero: miss
+    remove-and-update: miss
+    cycle-detect: miss
+    cost: miss
+  notes: Restates the goal.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Make the prerequisite graph and do a recursive walk from each course, marking courses as in progress or done. Before finishing a course, walk all the courses it needs first. Add a course to the plan when it's done, so a course always comes after everything it needs. If the walk ever reaches a course that's still in progress, the prerequisites loop and there's no plan. O(V + E).
+  labels:
+    directed-graph: hit
+    indegree: miss
+    start-zero: miss
+    remove-and-update: miss
+    cycle-detect: hit
+    cost: hit
+  notes: Post-order of a recursive walk with loop detection. Valid.

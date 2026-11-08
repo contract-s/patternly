@@ -1,0 +1,67 @@
+scenario: ranking-disagreements
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: 'Relabel each film with its rank from critic A and list them in critic B''s order. Now a disagreement is a pair where a bigger number comes before a smaller one. Count those recursively: split the list in half, count inside each half, and return each half sorted. Then merge the halves; whenever the next smallest comes from the right half, every item still in the left half is bigger and was earlier, so add how many are left there. Merging is linear, so the whole thing is O(n log n).'
+  labels:
+    reduce: hit
+    divide: hit
+    count-while-merging: hit
+    sorted-output: hit
+    cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Put the films in critic B's order with critic A's rank as the value. Then count pairs that are out of order by splitting the list in half and counting each half recursively, plus the pairs that cross between halves.
+  labels:
+    reduce: hit
+    divide: hit
+    count-while-merging: miss
+    sorted-output: miss
+    cost: miss
+  notes: Has the split but never explains how to count cross pairs fast.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Write critic A's ranks in critic B's order, so disagreements are out-of-order pairs. Split into halves and count each half recursively. For the pairs across halves, for each item in the right half, count how many items in the left half are bigger. Add it all up.
+  labels:
+    reduce: hit
+    divide: hit
+    count-while-merging: miss
+    sorted-output: miss
+    cost: miss
+  notes: Cross-count is done by brute force, so it's still O(n^2). Labeled as missing the key merge-count idea; sorted-output and cost follow from it.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Compare every pair of films and check whether the two critics put them in the same order. Count the pairs where they don't. It's simple and definitely correct.
+  labels:
+    reduce: miss
+    divide: miss
+    count-while-merging: miss
+    sorted-output: miss
+    cost: miss
+  notes: The O(n^2) approach the prompt rules out.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Line up the two rankings and count how many films are out of place, using a fast sorting method to do it in n log n.
+  labels:
+    reduce: miss
+    divide: miss
+    count-while-merging: miss
+    sorted-output: miss
+    cost: miss
+  notes: '''Out of place'' isn''t the same as out-of-order pairs; no mechanism.'
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Write critic A's ranks in critic B's order. Go through that list from left to right with a Fenwick tree (binary indexed tree) indexed by rank. For each film, ask the tree how many films already seen have a bigger rank, add that to the answer, then add this film's rank to the tree. Each query and update is O(log n), so the total is O(n log n).
+  labels:
+    reduce: hit
+    divide: miss
+    count-while-merging: miss
+    sorted-output: miss
+    cost: hit
+  notes: Counting with a Fenwick tree. Valid, same cost.

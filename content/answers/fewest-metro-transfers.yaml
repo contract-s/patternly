@@ -1,0 +1,73 @@
+scenario: fewest-metro-transfers
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: 'Stations are nodes and direct connections are edges. Start at the origin and use a queue: take the front station, and for each neighbor not seen yet, mark it seen right away, record that I came from the current station, and push it on the back. That explores everything 1 hop away, then 2 hops, and so on. Since every hop costs the same, the first time I pull out the destination it''s at the fewest hops. Walk the ''came from'' links back to get the route. It''s O(V + E).'
+  labels:
+    graph-model: hit
+    queue-by-level: hit
+    visited-on-enqueue: hit
+    first-reach-shortest: hit
+    parent-links: hit
+    linear-graph: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Treat the metro as a graph. Start at the origin and visit all its neighbors, then their neighbors, layer by layer, until you get to the destination. The number of layers is the number of hops.
+  labels:
+    graph-model: hit
+    queue-by-level: hit
+    visited-on-enqueue: miss
+    first-reach-shortest: miss
+    parent-links: miss
+    linear-graph: miss
+  notes: Layer-by-layer idea is there; no visited set, no route reconstruction, no cost.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: 'Build a graph of stations. Use a queue starting from the origin: pop a station and push all of its neighbors, recording the station we came from. Going level by level means the first time we reach the destination it''s the fewest hops, and we can follow the parent links back for the route. Linear in stations plus connections.'
+  labels:
+    graph-model: hit
+    queue-by-level: hit
+    visited-on-enqueue: miss
+    first-reach-shortest: hit
+    parent-links: hit
+    linear-graph: hit
+  notes: No visited marking, so stations are re-added forever around cycles and it isn't linear.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: 'Go deep from the origin: follow a connection, then another, recursively, until you hit the destination. Keep a visited set so you don''t loop. The path you found is the route, and count its hops.'
+  labels:
+    graph-model: hit
+    queue-by-level: miss
+    visited-on-enqueue: hit
+    first-reach-shortest: miss
+    parent-links: miss
+    linear-graph: miss
+  notes: Depth-first finds a route but not the fewest-hop route.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Model the stations as a graph and search outward from the start until you find the end station, keeping track of the path.
+  labels:
+    graph-model: hit
+    queue-by-level: miss
+    visited-on-enqueue: miss
+    first-reach-shortest: miss
+    parent-links: miss
+    linear-graph: miss
+  notes: Only the graph model is concrete.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: 'Make a graph of stations where every connection has weight 1, then run the usual shortest-path algorithm with a priority queue: start the origin at 0, always expand the closest unfinished station, and update neighbors if going through it is shorter, remembering the previous station. When the destination comes off the queue, its distance is the fewest hops, and following previous-station links gives the route. It''s O((V + E) log V), a bit slower than needed but correct.'
+  labels:
+    graph-model: hit
+    queue-by-level: miss
+    visited-on-enqueue: hit
+    first-reach-shortest: miss
+    parent-links: hit
+    linear-graph: miss
+  notes: Weighted shortest path with all weights 1. Correct, extra log factor.

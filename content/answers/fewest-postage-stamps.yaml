@@ -1,0 +1,73 @@
+scenario: fewest-postage-stamps
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: Greedy fails, like 14 = 7 + 7, so I'd try every possible last stamp. Let best[a] be the fewest stamps that make exactly a cents. best[0] = 0, and everything else starts as infinity meaning impossible. For a from 1 up to A, best[a] = 1 + min of best[a - s] over each stamp s <= a. Small amounts get reused a lot, which is why storing them helps. Answer is best[A], or impossible if it's still infinity. That's O(A times the number of stamp types).
+  labels:
+    subproblem: hit
+    recurrence: hit
+    base-cases: hit
+    order: hit
+    why-not-greedy: hit
+    cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: 'Try every combination of stamps that adds up to A and pick the one with the fewest stamps. You can do it recursively: pick a stamp, then solve for what''s left.'
+  labels:
+    subproblem: miss
+    recurrence: hit
+    base-cases: miss
+    order: miss
+    why-not-greedy: miss
+    cost: miss
+  notes: Has the recursion (last stamp, then the rest) but no stored subproblems, so it's exponential.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Define best[a] as the fewest stamps for a cents, with best[0] = 0 and unreachable amounts as infinity. Then best[a] = 1 + min over stamps s of best[a - s]. Fill from 1 up to A and return best[A]. That's A times the number of stamps.
+  labels:
+    subproblem: hit
+    recurrence: hit
+    base-cases: hit
+    order: hit
+    why-not-greedy: miss
+    cost: hit
+  notes: Mechanically right but never says why greedy fails or why subproblems are reused.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Always use the largest stamp that still fits, then repeat on what's left. For 14 cents that's a 10, then four 1s. It's fast because each step is just picking the biggest stamp.
+  labels:
+    subproblem: miss
+    recurrence: miss
+    base-cases: miss
+    order: miss
+    why-not-greedy: miss
+    cost: miss
+  notes: The greedy the prompt already says fails.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Break the amount into smaller amounts and figure out the best way to make each one, then combine them to get the answer.
+  labels:
+    subproblem: miss
+    recurrence: miss
+    base-cases: miss
+    order: miss
+    why-not-greedy: miss
+    cost: miss
+  notes: Gestures at subproblems without defining one.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Treat every amount from 0 to A as a node, with an edge from a to a + s for each stamp s. Start a queue at 0 and explore level by level, marking amounts as seen. Level k is every amount you can make with exactly k stamps, so the first time you reach A, k is the fewest stamps. If A is never reached, it's impossible. Each amount is visited once with one edge per stamp, so O(A x number of stamps).
+  labels:
+    subproblem: miss
+    recurrence: miss
+    base-cases: hit
+    order: miss
+    why-not-greedy: hit
+    cost: hit
+  notes: Level-by-level search over amounts. Valid and same cost.

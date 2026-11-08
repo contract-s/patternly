@@ -1,0 +1,73 @@
+scenario: fastest-delivery-routes
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: 'Intersections and addresses are nodes and roads are weighted edges. Set the depot''s time to 0 and everything else to infinity. Use a min-priority queue: pop the node with the smallest time, and for each road out of it, if its time plus the road''s time beats the neighbor''s current time, update the neighbor and push it. Once a node is popped its time is final, because all road times are non-negative, so any other route to it would be at least as long. With a binary heap that''s O((V + E) log V).'
+  labels:
+    weighted-graph: hit
+    init-distances: hit
+    min-queue: hit
+    relax: hit
+    finalized-why: hit
+    cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Make the map a weighted graph. Start from the depot at 0 and keep updating each place's time whenever you find a faster way through a neighbor, until nothing changes.
+  labels:
+    weighted-graph: hit
+    init-distances: miss
+    min-queue: miss
+    relax: hit
+    finalized-why: miss
+    cost: miss
+  notes: Relaxation without an order; no queue, no finality argument, no cost.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: Weighted graph, depot at 0, everything else infinity. Put the depot in a priority queue keyed by time, and always take the one with the lowest time next. For each road out of it, if going through it is faster, update the neighbor and push it. When the queue is empty you have all the times. O((V + E) log V).
+  labels:
+    weighted-graph: hit
+    init-distances: hit
+    min-queue: hit
+    relax: hit
+    finalized-why: miss
+    cost: hit
+  notes: Doesn't explain why popped times are final or why non-negative weights matter.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Start at the depot and explore outward level by level with a regular queue, so you reach places in order of how many roads away they are. The first time you reach an address, that's its fastest time.
+  labels:
+    weighted-graph: miss
+    init-distances: miss
+    min-queue: miss
+    relax: miss
+    finalized-why: miss
+    cost: miss
+  notes: Fewest roads isn't fastest when roads have different times.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Figure out the shortest path from the depot to everywhere using the road times, always going the quickest way.
+  labels:
+    weighted-graph: miss
+    init-distances: miss
+    min-queue: miss
+    relax: miss
+    finalized-why: miss
+    cost: miss
+  notes: Restates the problem.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: Set the depot to 0 and every other node to infinity. Then go over every road and, if going through it makes its end faster, update it. Repeat that full pass over all roads V - 1 times. After k passes, every place whose fastest route uses at most k roads is correct, and no fastest route needs more than V - 1 roads. It's O(V x E), slower, but it would even handle negative times.
+  labels:
+    weighted-graph: hit
+    init-distances: hit
+    min-queue: miss
+    relax: hit
+    finalized-why: miss
+    cost: miss
+  notes: Repeated passes over all edges. Correct, slower.

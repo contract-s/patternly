@@ -1,0 +1,67 @@
+scenario: trending-hashtags
+answers:
+- id: correct
+  kind: correct
+  verdict: pass
+  text: First count every hashtag with a hash map. Then go through the counts keeping a min-heap of at most 10 entries. Until it has 10, just push. After that, if a hashtag's count is bigger than the top of the heap, pop the top and push the new one. The heap keeps the smallest of my current top 10 on top because that's the one I compare against and kick out. At the end the heap has the top 10. That's O(n log 10) instead of O(n log n) for sorting.
+  labels:
+    count: hit
+    size-k: hit
+    replace-smallest: hit
+    why-min: hit
+    cost: hit
+- id: partial
+  kind: partial
+  verdict: fail
+  text: Count the hashtags with a dictionary. Then keep a list of the 10 best ones so far, and for each hashtag, if it's better than the worst one in the list, replace it.
+  labels:
+    count: hit
+    size-k: miss
+    replace-smallest: hit
+    why-min: miss
+    cost: miss
+  notes: Right idea, but a plain list means scanning 10 items to find the worst; no structure or cost reasoning.
+- id: missing-key-idea
+  kind: missing_key_idea
+  verdict: fail
+  text: 'Count each hashtag in a hash map. Keep a min-heap of the top 10: push until it has 10, and after that, when a count beats the top, pop the top and push the new one. The top is always the smallest of the 10, which is the one to compare against and evict.'
+  labels:
+    count: hit
+    size-k: hit
+    replace-smallest: hit
+    why-min: hit
+    cost: miss
+  notes: Never compares cost to sorting everything.
+- id: wrong-pattern
+  kind: wrong_pattern
+  verdict: fail
+  text: Put every hashtag and its count into a max-heap, then pop 10 times to get the top 10. Popping from a heap is fast.
+  labels:
+    count: hit
+    size-k: miss
+    replace-smallest: miss
+    why-min: miss
+    cost: miss
+  notes: Correct output but builds a heap of millions; misses the size-k idea the scenario is about.
+- id: vague
+  kind: vague
+  verdict: fail
+  text: Count how often each hashtag shows up and then find the biggest counts efficiently without sorting everything.
+  labels:
+    count: hit
+    size-k: miss
+    replace-smallest: miss
+    why-min: miss
+    cost: miss
+  notes: Counting is stated; the rest is hand-waving.
+- id: alternative
+  kind: alternative
+  verdict: pass
+  text: 'Count with a hash map. Then use a partition-based selection on the counts: pick a random pivot count, move bigger counts to one side, and recurse only into the side that contains the 10th largest, like the partition step of a quicksort but only following one side. When it''s done, the 10 biggest are on one side; sort just those for display. That''s O(n) on average.'
+  labels:
+    count: hit
+    size-k: miss
+    replace-smallest: miss
+    why-min: miss
+    cost: hit
+  notes: Quickselect over counts. Valid, average linear.
