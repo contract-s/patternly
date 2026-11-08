@@ -48,7 +48,9 @@ def _record(la: LabeledAnswer, run: int, content: Content, grade, usage, error: 
         "tutor_evidence": {c.rubric_id: c.evidence for c in grade.items} if grade else None,
         "tutor_verdict": grade.verdict if grade else None,
         "hint": grade.hint if grade else None,
-        "hint_names_pattern": hint_names_pattern(content, la.scenario.id, grade.hint) if grade else None,
+        "hint_names_pattern": hint_names_pattern(content, la.scenario.id, grade.hint, la.answer.text)
+        if grade
+        else None,
         "input_tokens": usage.input_tokens if usage else None,
         "output_tokens": usage.output_tokens if usage else None,
         "cost_usd": usage.cost_usd if usage else None,

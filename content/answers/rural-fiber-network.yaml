@@ -30,11 +30,11 @@ answers:
   labels:
     spanning-framing: hit
     sort-edges: miss
-    greedy-join: hit
+    greedy-join: miss
     union-find: hit
     stop-count: hit
     cost: miss
-  notes: Never sorts by price, so it builds some loop-free network that connects every town, but not the cheapest one.
+  notes: Never sorts by price, so it walks cables in list order rather than cheapest first; it builds some loop-free network that connects every town, but not the cheapest one.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail
@@ -64,10 +64,10 @@ answers:
   verdict: pass
   text: Start from any one town. Keep a priority queue of cables leaving the connected set, keyed by price. Repeatedly take the cheapest cable that reaches a town not yet connected, lay it, and add that town's cables to the queue. Cables to towns already connected get skipped. When all n towns are in, you've laid n - 1 cables and it's the cheapest network, since every step takes the cheapest way to grow the connected set. O(E log V).
   labels:
-    spanning-framing: hit
+    spanning-framing: miss
     sort-edges: miss
-    greedy-join: hit
+    greedy-join: miss
     union-find: miss
     stop-count: hit
     cost: miss
-  notes: Grows one connected tree from a start town. Valid, different from sorting all edges.
+  notes: Grows one connected tree from a start town. Valid, but it never sorts or walks cables in price order, and never explains why loops are wasteful.

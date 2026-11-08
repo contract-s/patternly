@@ -17,12 +17,12 @@ answers:
   text: Turn the formulas into a graph where each cell points to the cells it uses. Then from each cell, follow the references, and if you ever see a cell you've already visited, there's a circular reference.
   labels:
     directed-graph: hit
-    explore-each: hit
+    explore-each: miss
     three-states: miss
     back-edge-cycle: miss
     finished-skip: miss
     linear-graph: miss
-  notes: 'Plain visited set: two formulas that both read the same cell would be reported as a loop.'
+  notes: 'Plain visited set: two formulas that both read the same cell would be reported as a loop. Starts from every cell but never skips ones already fully explored.'
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail

@@ -60,8 +60,8 @@ answers:
   text: 'Since everything after the first broken build is broken, test builds 1, 2, 4, 8, 16, and so on until one fails. Say build 2048 is broken and 1024 is fine. Now the first broken build is between 1025 and 2048, and I halve that range: test its middle, keep the half that still has the switch from good to broken, and stop when one build is left. That''s about 2 log n tests, around 27, still logarithmic.'
   labels:
     sorted-property: hit
-    test-middle: miss
+    test-middle: hit
     discard-half: hit
     boundary: hit
-    log-cost: hit
-  notes: Doubling then halving. Valid and logarithmic, though about twice the tests of plain halving.
+    log-cost: miss
+  notes: Doubling then halving. Valid and logarithmic, and does test the middle of the narrowed range, but takes about twice the tests of plain halving (~27, not ~14).

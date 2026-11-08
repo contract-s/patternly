@@ -175,3 +175,11 @@ def test_run_eval_end_to_end_with_fake_client(content_dir, tmp_path):
     assert graded.isdisjoint(sealed)
     assert summary["metrics"]["false_pass_rate"]["mean"] == 1.0
     assert (out_dir / "summary.md").read_text().startswith("# Eval: t")
+
+
+def test_hint_leak_ignores_learners_own_words(one_scenario):
+    from patternly.evals.metrics import hint_names_pattern
+
+    assert hint_names_pattern(one_scenario, "s", "Have you tried the Hidden Trick?", "I'd loop over it")
+    assert not hint_names_pattern(one_scenario, "s", "Is your hidden trick right?", "I'd use a hidden trick here")
+    assert not hint_names_pattern(one_scenario, "s", "", "anything")

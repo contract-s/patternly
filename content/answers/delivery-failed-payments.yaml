@@ -24,14 +24,14 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Keep a range from left to right and count failed minutes in it. Push right forward and add to the count when the minute failed. When the count goes past 3, move left forward one minute, lowering the count if that minute failed. After each step, compare the range's length to the longest so far. Each minute is added and removed once so it's linear.
+  text: Keep a range from left to right and count failed minutes in it. Push right forward and add to the count when the minute failed. When the count goes past 3, start a new range at the current minute, with the count reset to 1. After each step, compare the range's length to the longest so far. Each minute is looked at once, so it's linear.
   labels:
     contiguous-range: hit
     expand-right: hit
     shrink-left: miss
     track-best: hit
     linear-time: hit
-  notes: Moves left only one step instead of until the count is back to 3, so a range with four or more failures can still be measured as the best.
+  notes: 'Restarts at the fourth failure instead of dropping only the oldest failure, so it throws away valid stretches: in S F S F S F S F S it never sees a range holding the last three failures plus the successes before them.'
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail
@@ -59,9 +59,9 @@ answers:
   verdict: pass
   text: Write down the positions of all the failed minutes in a list, with a fake failure at -1 before the start and at n after the end. Any valid stretch can contain failures i+1 through i+3 and must stop just before failure i+4 and start just after failure i. So the best is the max over i of fail[i+4] - fail[i] - 1. If there are 3 or fewer failures total, the whole log works. That's one pass to collect positions and one pass over them, so O(n).
   labels:
-    contiguous-range: miss
+    contiguous-range: hit
     expand-right: miss
     shrink-left: miss
     track-best: hit
     linear-time: hit
-  notes: Valid O(n) approach using gaps between failures instead of a moving range.
+  notes: Valid O(n) approach using gaps between failures. It does describe each stretch by its two ends, but never moves a range minute by minute.

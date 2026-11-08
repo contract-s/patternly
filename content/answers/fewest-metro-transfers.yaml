@@ -40,13 +40,13 @@ answers:
   verdict: fail
   text: 'Go deep from the origin: follow a connection, then another, recursively, until you hit the destination. Keep a visited set so you don''t loop. The path you found is the route, and count its hops.'
   labels:
-    graph-model: hit
+    graph-model: miss
     queue-by-level: miss
     visited-on-enqueue: miss
     first-reach-shortest: miss
     parent-links: miss
     linear-graph: miss
-  notes: Depth-first finds a route but not the fewest-hop route. Has a visited set, but not marked on adding to a queue, so visited-on-enqueue is a miss.
+  notes: Depth-first finds a route but not the fewest-hop route. Never models stations and connections as a graph, and its visited set isn't marked on adding to a queue.
 - id: vague
   kind: vague
   verdict: fail
