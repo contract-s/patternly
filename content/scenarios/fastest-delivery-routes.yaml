@@ -2,7 +2,7 @@ id: fastest-delivery-routes
 pattern: dijkstra
 title: Fastest routes from the depot
 prompt: |
-  A delivery company has a road map where each road segment has a travel time in minutes (never negative). Every morning it needs the fastest travel time from the depot to every address on the map.
+  A delivery company has a road map where each road segment has a travel time in whole minutes (never negative). Every morning it needs the fastest travel time from the depot to every address on the map. The map has about 300,000 intersections, and the times have to be ready within a few seconds.
 rubric:
 - id: weighted-graph
   idea: Models intersections and addresses as nodes and road segments as weighted edges.

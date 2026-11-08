@@ -13,14 +13,14 @@ answers:
 - id: partial
   kind: partial
   verdict: fail
-  text: Count the hashtags with a dictionary. Then keep a list of the 10 best ones so far, and for each hashtag, if it's better than the worst one in the list, replace it.
+  text: As each post comes in, add one to that hashtag's count in a dictionary. Keep a list of the 10 best hashtags so far, and whenever a hashtag's new count beats the worst count in the list, put it in the list in place of the worst one.
   labels:
     count: hit
     size-k: miss
     replace-smallest: hit
     why-min: miss
     cost: miss
-  notes: Right idea, but a plain list means scanning 10 items to find the worst; no structure or cost reasoning.
+  notes: 'Updates the top 10 while counts are still changing: a hashtag already in the list gets added again, and counts stored in the list go stale, so the final list can have duplicates and miss real top tags.'
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
@@ -48,12 +48,12 @@ answers:
   verdict: fail
   text: Count how often each hashtag shows up and then find the biggest counts efficiently without sorting everything.
   labels:
-    count: hit
+    count: miss
     size-k: miss
     replace-smallest: miss
     why-min: miss
     cost: miss
-  notes: Counting is stated; the rest is hand-waving.
+  notes: Says to count but not how (no per-hashtag map); the rest is hand-waving.
 - id: alternative
   kind: alternative
   verdict: pass

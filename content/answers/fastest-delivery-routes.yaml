@@ -62,12 +62,12 @@ answers:
 - id: alternative
   kind: alternative
   verdict: pass
-  text: Set the depot to 0 and every other node to infinity. Then go over every road and, if going through it makes its end faster, update it. Repeat that full pass over all roads V - 1 times. After k passes, every place whose fastest route uses at most k roads is correct, and no fastest route needs more than V - 1 roads. It's O(V x E), slower, but it would even handle negative times.
+  text: 'Travel times are whole minutes, so instead of a heap I''d use buckets indexed by time: bucket t holds the places whose best known time is t. Start with the depot in bucket 0 and every other place at infinity. Walk the buckets in increasing order of t. For each place in the current bucket (skipping it if its time has since gone down), check each road out of it, and if that gives a neighbor a faster time, move the neighbor into the bucket for its new time. Since no road takes negative time, a place''s time can''t drop after its bucket has been reached. That''s O(V + E + T), where T is the largest travel time.'
   labels:
     weighted-graph: hit
     init-distances: hit
-    min-queue: miss
+    min-queue: hit
     relax: hit
-    finalized-why: miss
+    finalized-why: hit
     cost: miss
-  notes: Repeated passes over all edges. Correct, slower.
+  notes: Bucket queue instead of a heap, which works because times are small whole numbers. Valid and fast; the cost bound differs from the heap version.
