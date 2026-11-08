@@ -12,8 +12,8 @@ rubric:
   idea: best[0] = 0, and amounts that can't be made are marked impossible (infinity) and don't count.
 - id: order
   idea: Fills amounts from small to large (or memoizes recursion) so smaller answers are ready when needed.
-- id: why-not-greedy
-  idea: Explains that the same smaller amounts are reused many times, and that greedy can be wrong, so trying all last stamps is needed.
+- id: reuse-subproblems
+  idea: 'Explains why storing answers pays off: the same smaller amounts come up again and again, so plain recursion over every last stamp would redo the same work exponentially many times.'
 - id: cost
   idea: O(A x number of stamp values) time.
 hints:

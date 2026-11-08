@@ -9,7 +9,7 @@ answers:
     recurrence: hit
     base-cases: hit
     order: hit
-    why-not-greedy: hit
+    reuse-subproblems: hit
     cost: hit
 - id: partial
   kind: partial
@@ -20,21 +20,21 @@ answers:
     recurrence: hit
     base-cases: miss
     order: miss
-    why-not-greedy: miss
+    reuse-subproblems: miss
     cost: miss
   notes: Has the recursion (last stamp, then the rest) but no stored subproblems, so it's exponential.
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Define best[a] as the fewest stamps for a cents, with best[0] = 0 and unreachable amounts as infinity. Then best[a] = 1 + min over stamps s of best[a - s]. Fill from 1 up to A and return best[A]. That's A times the number of stamps.
+  text: Define best[a] as the fewest stamps for a cents. Then best[a] = 1 + min over stamps s <= a of best[a - s]. Fill from 1 up to A and return best[A]. Storing the answers matters because the same smaller amounts come up over and over, so plain recursion would redo them. That's A times the number of stamps.
   labels:
     subproblem: hit
     recurrence: hit
-    base-cases: hit
+    base-cases: miss
     order: hit
-    why-not-greedy: miss
+    reuse-subproblems: hit
     cost: hit
-  notes: Mechanically right but never says why greedy fails or why subproblems are reused.
+  notes: No best[0] = 0 and no way to mark amounts that can't be made, so with stamps like 7 and 10 an amount like 3 has nothing to take the minimum over, and impossible postage is never reported.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail
@@ -44,7 +44,7 @@ answers:
     recurrence: miss
     base-cases: miss
     order: miss
-    why-not-greedy: miss
+    reuse-subproblems: miss
     cost: miss
   notes: The greedy the prompt already says fails.
 - id: vague
@@ -56,7 +56,7 @@ answers:
     recurrence: miss
     base-cases: miss
     order: miss
-    why-not-greedy: miss
+    reuse-subproblems: miss
     cost: miss
   notes: Gestures at subproblems without defining one.
 - id: alternative
@@ -68,6 +68,6 @@ answers:
     recurrence: miss
     base-cases: hit
     order: miss
-    why-not-greedy: hit
+    reuse-subproblems: miss
     cost: hit
   notes: Level-by-level search over amounts. Valid and same cost.

@@ -14,13 +14,11 @@ rubric:
   idea: If a course can't get any slot, goes back, undoes the previous course's slot, and tries its next one.
 - id: report
   idea: Succeeds when every course has a slot, and reports none exists when every option has been tried.
-- id: order-heuristic
-  idea: Assigns the most-constrained courses first (most conflicts) to hit dead ends early.
 hints:
 - Draw each course as a dot and connect two courses if a student takes both. What rule must connected courses follow?
 - Assign slots one course at a time, only using a slot that no connected, already-assigned course has. What should happen when a course has no allowed slot left?
-- When you're stuck, go back to the previous course, undo its slot, and try its next option, then carry on forward again. Which courses would you assign first so that you hit dead ends as early as possible?
+- When you're stuck, go back to the previous course, undo its slot, and try its next option, then carry on forward again. When can you be sure that no assignment exists at all?
 reference_solution: |
-  Order courses by number of conflicts, most first. Recurse on course index i: if i equals the number of courses, done. For each slot s, if no conflicting course already has s, assign it and recurse on i + 1; if that succeeds, return success, else unassign and try the next slot. If no slot works, return failure so the caller tries something else.
+  Recurse on course index i: if i equals the number of courses, every course has a slot, so succeed. For each slot s, if no conflicting course already has s, assign it and recurse on i + 1; if that succeeds, return success, else unassign and try the next slot. If no slot works, return failure so the caller tries its next option. If the very first course runs out of options, no assignment exists. Assigning the courses with the most conflicts first is an optional speedup that hits dead ends early.
 time_complexity: O(k^n) worst case
 space_complexity: O(n)

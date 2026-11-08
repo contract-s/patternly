@@ -24,14 +24,14 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: 'Count each hashtag in a hash map. Keep a min-heap of the top 10: push until it has 10, and after that, when a count beats the top, pop the top and push the new one. The top is always the smallest of the 10, which is the one to compare against and evict.'
+  text: 'Count each hashtag in a hash map. Keep the current top 10 in a max-heap: push until it has 10, then for each hashtag, if its count beats the top of the heap, pop the top and push the new one. It''s O(n log 10), much cheaper than sorting everything.'
   labels:
     count: hit
-    size-k: hit
-    replace-smallest: hit
-    why-min: hit
-    cost: miss
-  notes: Never compares cost to sorting everything.
+    size-k: miss
+    replace-smallest: miss
+    why-min: miss
+    cost: hit
+  notes: Keeps the largest on top, so it compares against and evicts the strongest candidate instead of the weakest; the result isn't the top 10.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail
@@ -63,5 +63,5 @@ answers:
     size-k: miss
     replace-smallest: miss
     why-min: miss
-    cost: hit
+    cost: miss
   notes: Quickselect over counts. Valid, average linear.

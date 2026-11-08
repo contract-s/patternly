@@ -24,14 +24,14 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Write critic A's ranks in critic B's order, so disagreements are out-of-order pairs. Split into halves and count each half recursively. For the pairs across halves, for each item in the right half, count how many items in the left half are bigger. Add it all up.
+  text: 'Write critic A''s ranks in critic B''s order, so disagreements are out-of-order pairs. Split into halves and count inside each half recursively. Then walk the two halves with one pointer each: when the right item is smaller than the left item, add the number of items left in the left half and move the right pointer, otherwise move the left pointer. That counts the cross pairs in linear time, so it''s O(n log n) overall.'
   labels:
     reduce: hit
     divide: hit
-    count-while-merging: miss
+    count-while-merging: hit
     sorted-output: miss
     cost: miss
-  notes: Cross-count is done by brute force, so it's still O(n^2). Labeled as missing the key merge-count idea; sorted-output and cost follow from it.
+  notes: Never returns the halves sorted. On unsorted halves, 'everything left in the left half is bigger' is false, so the cross count is wrong and the cost claim doesn't hold.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail

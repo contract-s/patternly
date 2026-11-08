@@ -24,14 +24,14 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Keep a range from left to right and count failed minutes in it. Push right forward and add to the count when the minute failed. When the count goes past 3, move left forward one step at a time, lowering the count when a failed minute leaves, until there are 3 again. Each minute is added and removed once so it's linear.
+  text: Keep a range from left to right and count failed minutes in it. Push right forward and add to the count when the minute failed. When the count goes past 3, move left forward one minute, lowering the count if that minute failed. After each step, compare the range's length to the longest so far. Each minute is added and removed once so it's linear.
   labels:
     contiguous-range: hit
     expand-right: hit
-    shrink-left: hit
-    track-best: miss
+    shrink-left: miss
+    track-best: hit
     linear-time: hit
-  notes: 'Never says where the answer comes from: no tracking of the longest valid range.'
+  notes: Moves left only one step instead of until the count is back to 3, so a range with four or more failures can still be measured as the best.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail

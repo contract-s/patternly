@@ -26,15 +26,15 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Weighted graph, depot at 0, everything else infinity. Put the depot in a priority queue keyed by time, and always take the one with the lowest time next. For each road out of it, if going through it is faster, update the neighbor and push it. When the queue is empty you have all the times. O((V + E) log V).
+  text: Weighted graph, depot at 0, everything else infinity. Put the depot in a priority queue keyed by time, and always take the one with the lowest time next. For each road out of it, if the neighbor doesn't have a time yet, give it this node's time plus the road's time and push it. Once a place has a time it's final, since road times are never negative. O((V + E) log V).
   labels:
     weighted-graph: hit
     init-distances: hit
     min-queue: hit
-    relax: hit
+    relax: miss
     finalized-why: miss
     cost: hit
-  notes: Doesn't explain why popped times are final or why non-negative weights matter.
+  notes: Fixes a place's time the first time it's reached instead of lowering it when a faster road shows up later, so times can be too high. Finality is claimed at the wrong moment.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail

@@ -5,7 +5,7 @@ prompt: |
   A handheld game console has to sort several million high-score entries by score. It has almost no spare memory, so the sort must happen inside the existing array, and it should be fast on average. The scores often arrive already nearly sorted.
 rubric:
 - id: pivot
-  idea: Picks a pivot value, chosen at random (or median of three).
+  idea: Picks a pivot value from the range.
 - id: partition
   idea: Rearranges the range so values smaller than the pivot are on its left and larger ones on its right, in place.
 - id: pivot-final
@@ -15,7 +15,7 @@ rubric:
 - id: random-pivot-why
   idea: Explains that always picking the first or last item is O(n^2) on nearly sorted input, and a random pivot avoids that.
 - id: cost
-  idea: O(n log n) on average, in place, with O(log n) recursion stack if it recurses on the smaller side first.
+  idea: States O(n log n) on average and that it sorts in place, using only recursion-stack memory (O(log n) if the smaller side is handled first).
 hints:
 - Pick one score. Can you rearrange the array, in place, so that score ends up exactly where it belongs in the sorted order?
 - Put every score smaller than your chosen one on its left and every larger score on its right. Now that score is in its final spot, and the left and right parts are just smaller versions of the same problem.

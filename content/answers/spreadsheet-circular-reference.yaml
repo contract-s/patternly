@@ -26,15 +26,15 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Each cell is a node with arrows to the cells it reads. Do a recursive walk from every cell that isn't done yet, marking a cell as in progress when you enter it. If you run into a cell that's in progress, you found a loop. When you finish exploring a cell, mark it done. It's O(V + E).
+  text: Each cell is a node with arrows to the cells it reads. Do a recursive walk from every cell you haven't visited, marking each cell as in progress when you enter it. If you run into a cell that's in progress, you found a loop. Each cell is entered once, so it's O(V + E).
   labels:
     directed-graph: hit
     explore-each: hit
-    three-states: hit
+    three-states: miss
     back-edge-cycle: hit
     finished-skip: miss
-    linear-graph: miss
-  notes: Marks cells done but never skips them, so shared cells are re-explored and the O(V + E) claim doesn't hold.
+    linear-graph: hit
+  notes: Never moves a cell from 'in progress' to 'done', so a cell reached by a second path (A1 and B1 both read C1) is reported as a loop.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail

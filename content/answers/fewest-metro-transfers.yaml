@@ -33,8 +33,8 @@ answers:
     visited-on-enqueue: miss
     first-reach-shortest: hit
     parent-links: hit
-    linear-graph: hit
-  notes: No visited marking, so stations are re-added forever around cycles and it isn't linear.
+    linear-graph: miss
+  notes: No visited marking, so stations are queued many times around loops (forever if the destination can't be reached), and the linear-time claim doesn't hold.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail
@@ -42,11 +42,11 @@ answers:
   labels:
     graph-model: hit
     queue-by-level: miss
-    visited-on-enqueue: hit
+    visited-on-enqueue: miss
     first-reach-shortest: miss
     parent-links: miss
     linear-graph: miss
-  notes: Depth-first finds a route but not the fewest-hop route.
+  notes: Depth-first finds a route but not the fewest-hop route. Has a visited set, but not marked on adding to a queue, so visited-on-enqueue is a miss.
 - id: vague
   kind: vague
   verdict: fail
@@ -66,7 +66,7 @@ answers:
   labels:
     graph-model: hit
     queue-by-level: miss
-    visited-on-enqueue: hit
+    visited-on-enqueue: miss
     first-reach-shortest: miss
     parent-links: hit
     linear-graph: miss

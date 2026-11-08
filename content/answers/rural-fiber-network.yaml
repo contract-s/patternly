@@ -26,15 +26,15 @@ answers:
 - id: missing-key-idea
   kind: missing_key_idea
   verdict: fail
-  text: Connecting everything with no loops is the goal. Sort the cables cheapest first and lay each one unless it would make a loop, stopping at n - 1 cables. To tell whether a cable makes a loop, check whether there's already a path between its two towns by searching the cables laid so far.
+  text: Connecting everything with no loops is the goal. Put every town in its own group with union-find. Go through the list of cables and lay each one whose two towns are in different groups, merging the groups, and stop after n - 1 cables. Union-find makes each check almost constant time.
   labels:
     spanning-framing: hit
-    sort-edges: hit
+    sort-edges: miss
     greedy-join: hit
-    union-find: miss
+    union-find: hit
     stop-count: hit
     cost: miss
-  notes: Searching for a path on every cable makes it O(E x V), so no fast connectivity check and no valid cost.
+  notes: Never sorts by price, so it builds some loop-free network that connects every town, but not the cheapest one.
 - id: wrong-pattern
   kind: wrong_pattern
   verdict: fail

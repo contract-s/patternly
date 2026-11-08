@@ -13,12 +13,12 @@ rubric:
 - id: skip-equal
   idea: Recurses only on the smaller and greater parts, never on the equal block, since it's already in place.
 - id: cost
-  idea: Explains this is fast when there are few distinct values (close to linear here) and O(n log n) on average in general.
+  idea: Explains this is fast when there are few distinct values (roughly O(n log d) for d distinct values, close to linear here) and O(n log n) on average in general.
 hints:
 - There are only five possible priorities across millions of tickets. When the current sort splits around a chosen value, how big is each side if most tickets equal that value?
 - Splitting into 'smaller' and 'not smaller' puts all the equal tickets on one side, so the split is lopsided again and again. What if equal tickets got their own group?
 - 'Split each range into three parts in one pass: less than, equal to, and greater than the chosen value, using a low pointer, a scanning pointer, and a high pointer. Then recurse only on the less and greater parts. Why does the equal block never need touching again?'
 reference_solution: |
   Equal keys all land on one side of a two-way split, so the split is lopsided. Use a three-way partition with a random pivot: low, mid, high pointers; values below the pivot are swapped to low, values above are swapped to high, equal values stay in the middle. Then recurse only on the below and above parts. With five distinct priorities, there are only a few levels of real work.
-time_complexity: O(n log n) average; O(n x distinct values) here
+time_complexity: O(n log n) average; about O(n log d) for d distinct values, so near-linear here
 space_complexity: O(log n)
