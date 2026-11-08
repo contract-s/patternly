@@ -1,0 +1,17 @@
+# Copy to scenarios/<id>.yaml. The file name must equal `id`.
+# Files starting with "_" are ignored by the tools.
+id: example-scenario-id
+pattern: my-pattern            # an id from patterns.yaml
+title: Short, real-world title (don't name the pattern)
+prompt: |
+  The scenario the learner reads. Write it yourself; don't copy problem text
+  from other sites. Don't name the pattern here.
+rubric:                        # the hidden checklist of key ideas
+  - id: first-key-idea
+    idea: One key idea a good explanation must contain.
+  - id: second-key-idea
+    idea: Another key idea.
+reference_solution: |
+  Your plain-words solution that hits every rubric item.
+time_complexity: O(?)
+space_complexity: O(?)

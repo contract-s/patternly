@@ -1,0 +1,16 @@
+# Copy to answers/<scenario-id>.yaml. Write one answer of each kind (6 per scenario):
+#   correct, partial, missing_key_idea, wrong_pattern, vague, alternative
+# verdict: pass if the answer should earn the reveal, fail otherwise.
+#   (A false pass is when the tutor says pass on an answer you marked fail.)
+# labels: every rubric item id from the scenario, marked hit or miss.
+scenario: example-scenario-id
+answers:
+  - id: correct
+    kind: correct
+    verdict: pass
+    text: |
+      A learner's plain-words explanation.
+    labels:
+      first-key-idea: hit
+      second-key-idea: hit
+    notes: Optional. Why you labeled it this way.

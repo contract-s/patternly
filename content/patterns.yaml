@@ -1,0 +1,10 @@
+# The patterns your scenarios teach. Weekend 1 target: 5 patterns.
+# `aliases` are other names for the same pattern; scenario titles and prompts
+# must not contain the name or any alias, and later the leak checker uses them too.
+#
+# Example entry:
+#   - id: my-pattern
+#     name: My Pattern
+#     aliases: [another name]
+
+patterns: []
