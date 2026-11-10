@@ -26,7 +26,8 @@ class FakeMessages:
 
     def parse(self, **kwargs):
         self.calls.append(kwargs)
-        g = self.decide(kwargs["messages"][0]["content"])
+        content = kwargs["messages"][0]["content"]
+        g = self.decide("".join(b["text"] for b in content) if isinstance(content, list) else content)
         parsed = None
         if g is not None:
             parsed = kwargs["output_format"](
@@ -191,7 +192,8 @@ def test_notes_go_into_prompt_only_when_given(one_scenario):
     s = one_scenario.scenarios["s"]
     assert "<reference_notes>" not in build_user_message(s, "a")
     msg = build_user_message(s, "a", ["# Note one", "# Note two"])
-    assert msg.startswith("<reference_notes>") and "<note>\n# Note two\n</note>" in msg
+    assert "<note>\n# Note two\n</note>" in msg
+    assert msg.index("</rubric>") < msg.index("<reference_notes>") < msg.index("<learner_explanation>")
 
     client = FakeClient(lambda _msg: grade({"idea-a": True, "idea-b": True}))
     grade_answer(client, s, "a")
@@ -219,3 +221,83 @@ def test_run_eval_passes_retrieved_notes(content_dir, tmp_path):
     assert len(seen) == 2 and all("NOTE-3" in m for m in seen)
     meta = json.loads((out_dir / "config.json").read_text())
     assert meta["grounding"] == "test" and len(meta["retrieved"]) == 2
+
+
+def test_cached_block_is_shared_by_answers_to_a_scenario(one_scenario):
+    from patternly.tutor.baseline import build_user_content
+
+    s = one_scenario.scenarios["s"]
+    a = build_user_content(s, "first answer", ["# Note"])
+    b = build_user_content(s, "second answer")
+    assert a[0] == b[0] and a[0]["cache_control"] == {"type": "ephemeral"}
+    assert "cache_control" not in a[1] and "first answer" in a[1]["text"] and "# Note" in a[1]["text"]
+
+
+def test_cost_counts_cache_and_batch():
+    from patternly.tutor.baseline import Usage
+
+    u = Usage(1000, 500, 1.0, "claude-opus-5-5", cache_creation_input_tokens=2000, cache_read_input_tokens=4000)
+    expected = (1000 * 4 + 2000 * 4 * 1.25 + 4000 * 0.20 + 500 * 20) / 1e6
+    assert u.cost_usd == pytest.approx(expected)
+    assert u.total_input_tokens == 7000
+    batched = Usage(1000, 500, None, "claude-opus-5-5", 2000, 4000, batch=True)
+    assert batched.cost_usd == pytest.approx(expected / 2)
+
+
+class FakeBatches:
+    """Batch API stand-in: grades each request with `decide` and reports it ended after one poll."""
+
+    def __init__(self, decide):
+        self.decide = decide
+        self.created = None
+        self.polls = 0
+
+    def create(self, requests):
+        self.created = requests
+        return SimpleNamespace(id="b1", processing_status="in_progress")
+
+    def retrieve(self, batch_id):
+        self.polls += 1
+        n = len(self.created)
+        counts = SimpleNamespace(succeeded=n, errored=0, canceled=0, expired=0)
+        return SimpleNamespace(id=batch_id, processing_status="ended", request_counts=counts)
+
+    def results(self, batch_id):
+        for req in self.created:
+            params = req["params"]
+            text = "".join(b["text"] for b in params["messages"][0]["content"])
+            g = self.decide(text)
+            body = {
+                "items": {
+                    "item_" + c.rubric_id.replace("-", "_"): {"evidence": c.evidence, "hit": c.hit} for c in g.items
+                },
+                "verdict": g.verdict,
+                "hint": g.hint,
+            }
+            message = SimpleNamespace(
+                stop_reason="end_turn",
+                content=[SimpleNamespace(type="text", text=json.dumps(body))],
+                usage=SimpleNamespace(
+                    input_tokens=100, output_tokens=500, cache_creation_input_tokens=0, cache_read_input_tokens=900
+                ),
+            )
+            yield SimpleNamespace(custom_id=req["custom_id"], result=SimpleNamespace(type="succeeded", message=message))
+
+
+def test_run_eval_batch_mode(content_dir, tmp_path, monkeypatch):
+    import patternly.evals.runner as runner
+
+    monkeypatch.setattr(runner, "BATCH_POLL_SECONDS", 0)
+    monkeypatch.setattr(runner.time, "sleep", lambda s: None)
+    content_dir.full()
+    content = load_content(content_dir.root)
+    batches = FakeBatches(lambda msg: grade({"idea-a": True, "idea-b": True}))
+    client = SimpleNamespace(messages=SimpleNamespace(batches=batches))
+    config = EvalConfig(label="b", split="dev", runs=2, model="claude-opus-5-5", effort="low", batch=True)
+    out_dir, summary = run_eval(client, content, config, tmp_path)
+    assert len(batches.created) == 120 and summary["calls"] == 120 and summary["errors"] == 0
+    params = batches.created[0]["params"]
+    assert params["output_config"]["format"]["type"] == "json_schema"
+    assert params["output_config"]["effort"] == "low"
+    assert summary["cost"]["batch"] and summary["cost"]["cache_read_share_of_input"] == pytest.approx(0.9)
+    assert "batch API" in (out_dir / "summary.md").read_text()

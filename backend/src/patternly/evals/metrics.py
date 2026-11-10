@@ -117,6 +117,8 @@ def summarize(records: list[dict]) -> dict:
     latencies = [r["latency_s"] for r in records if r["latency_s"] is not None]
     out_tokens = [r["output_tokens"] for r in records if r["output_tokens"] is not None]
     in_tokens = [r["input_tokens"] for r in records if r["input_tokens"] is not None]
+    cache_read = sum(r.get("cache_read_input_tokens") or 0 for r in records)
+    cache_write = sum(r.get("cache_creation_input_tokens") or 0 for r in records)
 
     return {
         "runs": len(runs),
@@ -132,6 +134,9 @@ def summarize(records: list[dict]) -> dict:
             "per_call_usd": statistics.fmean(costs) if costs else None,
             "mean_input_tokens": statistics.fmean(in_tokens) if in_tokens else None,
             "mean_output_tokens": statistics.fmean(out_tokens) if out_tokens else None,
+            "cache_read_share_of_input": cache_read / sum(in_tokens) if in_tokens and sum(in_tokens) else None,
+            "cache_write_share_of_input": cache_write / sum(in_tokens) if in_tokens and sum(in_tokens) else None,
+            "batch": any(r.get("batch") for r in records),
         },
         "latency_s": {"p50": _percentile(latencies, 50), "p95": _percentile(latencies, 95)},
     }
@@ -141,6 +146,12 @@ def _pct(spread: dict | None) -> str:
     if spread is None:
         return "n/a"
     return f"{spread['mean']:.1%} (range {spread['min']:.1%}–{spread['max']:.1%})"
+
+
+def _latency_line(summary: dict) -> str:
+    if summary["cost"].get("batch"):
+        return "batch API (half price; no per-call latency)"
+    return f"latency p50 {summary['latency_s']['p50'] or 0:.1f}s, p95 {summary['latency_s']['p95'] or 0:.1f}s"
 
 
 def render_markdown(summary: dict, config: dict) -> str:
@@ -165,8 +176,9 @@ def render_markdown(summary: dict, config: dict) -> str:
         "",
         f"- Answers whose verdict changed between runs: {summary['verdict_flips']['answers']} of {summary['answers']}",
         f"- Cost: ${summary['cost']['total_usd']:.2f} total, "
-        f"${(summary['cost']['per_call_usd'] or 0):.4f} per call; "
-        f"latency p50 {summary['latency_s']['p50'] or 0:.1f}s, p95 {summary['latency_s']['p95'] or 0:.1f}s",
+        f"${(summary['cost']['per_call_usd'] or 0):.4f} per call; " + _latency_line(summary),
+        f"- Input from cache: {(summary['cost'].get('cache_read_share_of_input') or 0):.0%} read, "
+        f"{(summary['cost'].get('cache_write_share_of_input') or 0):.0%} written",
         "",
         "Tutor pass rate by answer type:",
         "",

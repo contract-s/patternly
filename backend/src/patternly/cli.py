@@ -125,6 +125,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
         concurrency=args.concurrency,
         limit=args.limit,
         grounding=args.notes,
+        batch=args.batch,
     )
     retrieved = None
     if args.notes != "none":
@@ -243,6 +244,7 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--concurrency", type=int, default=8)
     ev.add_argument("--limit", type=int, help="only the first N answers (for a quick check)")
     ev.add_argument("--label", default="baseline", help="name for the results folder")
+    ev.add_argument("--batch", action="store_true", help="use the Message Batches API (half price, slower)")
     ev.add_argument(
         "--notes",
         default="none",

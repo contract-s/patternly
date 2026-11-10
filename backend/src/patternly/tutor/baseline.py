@@ -18,12 +18,15 @@ DEFAULT_MODEL = "claude-opus-5-5"
 DEFAULT_EFFORT = "medium"
 MAX_TOKENS = 16_000
 
-# USD per million tokens (input, output). Output includes thinking tokens.
-PRICES: dict[str, tuple[float, float]] = {
-    "claude-opus-5-5": (4.00, 20.00),
-    "claude-sonnet-5-5": (2.00, 10.00),
-    "claude-haiku-5-5": (0.10, 0.50),
+# USD per million tokens: (input, output, cache read). Output includes thinking tokens.
+# Cache writes (5-minute TTL) cost 1.25x input. The Batch API halves everything.
+PRICES: dict[str, tuple[float, float, float]] = {
+    "claude-opus-5-5": (4.00, 20.00, 0.20),
+    "claude-sonnet-5-5": (2.00, 10.00, 0.10),
+    "claude-haiku-5-5": (0.10, 0.50, 0.01),  # cache read assumed at 0.1x input; check the pricing page
 }
+CACHE_WRITE_MULTIPLIER = 1.25
+BATCH_DISCOUNT = 0.5
 
 SYSTEM_PROMPT = """\
 You grade a learner's plain-words explanation of how they would solve an algorithm scenario.
@@ -121,15 +124,40 @@ def to_grade(output: BaseModel, scenario: Scenario) -> Grade:
 
 @dataclass(frozen=True)
 class Usage:
-    input_tokens: int
+    input_tokens: int  # uncached input only, as the API reports it
     output_tokens: int
-    latency_s: float
+    latency_s: float | None  # None for batch requests
     model: str
+    cache_creation_input_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    batch: bool = False
+
+    @property
+    def total_input_tokens(self) -> int:
+        return self.input_tokens + self.cache_creation_input_tokens + self.cache_read_input_tokens
 
     @property
     def cost_usd(self) -> float:
-        price_in, price_out = PRICES.get(self.model, (0.0, 0.0))
-        return (self.input_tokens * price_in + self.output_tokens * price_out) / 1_000_000
+        price_in, price_out, price_read = PRICES.get(self.model, (0.0, 0.0, 0.0))
+        cost = (
+            self.input_tokens * price_in
+            + self.cache_creation_input_tokens * price_in * CACHE_WRITE_MULTIPLIER
+            + self.cache_read_input_tokens * price_read
+            + self.output_tokens * price_out
+        ) / 1_000_000
+        return cost * BATCH_DISCOUNT if self.batch else cost
+
+    @classmethod
+    def from_response(cls, usage, model: str, latency_s: float | None, batch: bool = False) -> Usage:
+        return cls(
+            input_tokens=usage.input_tokens,
+            output_tokens=usage.output_tokens,
+            latency_s=latency_s,
+            model=model,
+            cache_creation_input_tokens=getattr(usage, "cache_creation_input_tokens", None) or 0,
+            cache_read_input_tokens=getattr(usage, "cache_read_input_tokens", None) or 0,
+            batch=batch,
+        )
 
 
 class GradeError(Exception):
@@ -147,19 +175,81 @@ class MessagesClient(Protocol):
     def messages(self): ...
 
 
-def build_user_message(scenario: Scenario, answer_text: str, notes: list[str] | None = None) -> str:
-    # The pattern name and reference solution are left out on purpose: the grader should judge
-    # against the rubric, and can't leak a name it was never given.
+def build_user_content(scenario: Scenario, answer_text: str, notes: list[str] | None = None) -> list[dict]:
+    """Two text blocks: the part shared by every answer to this scenario (cached), then the per-answer part.
+
+    The pattern name and reference solution are left out on purpose: the grader should judge against
+    the rubric, and can't leak a name it was never given.
+    """
     rubric = "\n".join(f"- {item.id}: {item.idea}" for item in scenario.rubric)
+    shared = (
+        f"<scenario>\n{scenario.title}\n\n{scenario.prompt.strip()}\n</scenario>\n\n<rubric>\n{rubric}\n</rubric>\n\n"
+    )
     reference = ""
     if notes:
         reference = "".join(f"<note>\n{n.strip()}\n</note>\n" for n in notes)
         reference = f"<reference_notes>\n{reference}</reference_notes>\n\n"
-    return reference + (
-        f"<scenario>\n{scenario.title}\n\n{scenario.prompt.strip()}\n</scenario>\n\n"
-        f"<rubric>\n{rubric}\n</rubric>\n\n"
-        f"<learner_explanation>\n{answer_text.strip()}\n</learner_explanation>"
-    )
+    per_answer = f"{reference}<learner_explanation>\n{answer_text.strip()}\n</learner_explanation>"
+    return [
+        # Everything up to and including this block (system prompt, schema, scenario, rubric) is cached.
+        {"type": "text", "text": shared, "cache_control": {"type": "ephemeral"}},
+        {"type": "text", "text": per_answer},
+    ]
+
+
+def build_user_message(scenario: Scenario, answer_text: str, notes: list[str] | None = None) -> str:
+    """The user message as plain text (for reading and tests)."""
+    return "".join(b["text"] for b in build_user_content(scenario, answer_text, notes))
+
+
+def request_params(
+    scenario: Scenario, answer_text: str, *, model: str, effort: str, notes: list[str] | None = None
+) -> dict:
+    """Request fields shared by live and batch calls (everything except the output schema)."""
+    return {
+        "model": model,
+        "max_tokens": MAX_TOKENS,
+        "system": SYSTEM_PROMPT + NOTES_PROMPT if notes else SYSTEM_PROMPT,
+        "messages": [{"role": "user", "content": build_user_content(scenario, answer_text, notes)}],
+    }
+
+
+def batch_params(
+    scenario: Scenario, answer_text: str, *, model: str, effort: str, notes: list[str] | None = None
+) -> dict:
+    """Params for a Message Batches request. Batches can't use `parse`, so the schema goes in
+    `output_config.format` directly, transformed the same way `parse` does it."""
+    from anthropic import transform_schema
+
+    schema = transform_schema(output_model(scenario).model_json_schema())
+    return {
+        **request_params(scenario, answer_text, model=model, effort=effort, notes=notes),
+        "output_config": {"effort": effort, "format": {"type": "json_schema", "schema": schema}},
+    }
+
+
+def finish_grade(scenario: Scenario, stop_reason: str | None, parsed: BaseModel | None, usage: Usage) -> Grade:
+    if stop_reason != "end_turn":
+        raise GradeError(f"stopped with '{stop_reason}'", usage)
+    if parsed is None:
+        raise GradeError("no parsed output", usage)
+    try:
+        return check_grade(to_grade(parsed, scenario), scenario)
+    except GradeError as e:
+        raise GradeError(str(e), usage) from None
+
+
+def grade_batch_message(scenario: Scenario, message, model: str) -> tuple[Grade, Usage]:
+    """Turn a succeeded batch result's message into a grade."""
+    usage = Usage.from_response(message.usage, model, None, batch=True)
+    parsed = None
+    if message.stop_reason == "end_turn":
+        text = next((b.text for b in message.content if b.type == "text"), "")
+        try:
+            parsed = output_model(scenario).model_validate_json(text)
+        except ValueError as e:
+            raise GradeError(f"output didn't match the schema: {e}", usage) from None
+    return finish_grade(scenario, message.stop_reason, parsed, usage), usage
 
 
 def check_grade(grade: Grade, scenario: Scenario) -> Grade:
@@ -188,24 +278,9 @@ def grade_answer(
 ) -> tuple[Grade, Usage]:
     started = time.perf_counter()
     response = client.messages.parse(
-        model=model,
-        max_tokens=MAX_TOKENS,
-        system=SYSTEM_PROMPT + NOTES_PROMPT if notes else SYSTEM_PROMPT,
+        **request_params(scenario, answer_text, model=model, effort=effort, notes=notes),
         output_config={"effort": effort},
         output_format=output_model(scenario),
-        messages=[{"role": "user", "content": build_user_message(scenario, answer_text, notes)}],
     )
-    usage = Usage(
-        input_tokens=response.usage.input_tokens,
-        output_tokens=response.usage.output_tokens,
-        latency_s=time.perf_counter() - started,
-        model=model,
-    )
-    if response.stop_reason != "end_turn":
-        raise GradeError(f"stopped with '{response.stop_reason}'", usage)
-    if response.parsed_output is None:
-        raise GradeError("no parsed output", usage)
-    try:
-        return check_grade(to_grade(response.parsed_output, scenario), scenario), usage
-    except GradeError as e:
-        raise GradeError(str(e), usage) from None
+    usage = Usage.from_response(response.usage, model, time.perf_counter() - started)
+    return finish_grade(scenario, response.stop_reason, response.parsed_output, usage), usage
