@@ -1,0 +1,7 @@
+{
+  "label": "retrieval",
+  "split": "dev",
+  "embed_model": "BAAI/bge-small-en-v1.5",
+  "rerank_model": "BAAI/bge-reranker-base",
+  "started_at": "2026-11-09T11:48:05"
+}

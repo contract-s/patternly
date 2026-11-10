@@ -1,4 +1,4 @@
-"""`patternly` command line: validate, stats, seal, eval."""
+"""`patternly` command line: validate, stats, seal, eval, index, search, retrieval-eval."""
 
 from __future__ import annotations
 
@@ -124,17 +124,93 @@ def cmd_eval(args: argparse.Namespace) -> int:
         effort=args.effort,
         concurrency=args.concurrency,
         limit=args.limit,
+        grounding=args.notes,
     )
+    retrieved = None
+    if args.notes != "none":
+        from .evals.runner import select_answers
+        from .retrieval.models import LocalEmbedder
+        from .retrieval.search import Retriever, top_patterns
+        from .retrieval.store import connect
+
+        method, top = args.notes.rsplit("-top", 1)
+        with connect() as conn:
+            retriever = Retriever(conn, LocalEmbedder())
+            retrieved = {
+                la.key: top_patterns(retriever.search(la.answer.text, method, limit=30), int(top))
+                for la in select_answers(content, config.split, config.limit)
+            }
     out_root = Path(args.out) if args.out else content.root.parent / "evals" / "runs"
 
     def progress(done: int, total: int) -> None:
         print(f"\r{done}/{total} calls", end="", file=sys.stderr, flush=True)
 
-    out_dir, summary = run_eval(anthropic.Anthropic(), content, config, out_root, progress)
+    out_dir, summary = run_eval(anthropic.Anthropic(), content, config, out_root, progress, retrieved)
     print(file=sys.stderr)
     print((out_dir / "summary.md").read_text())
     print(f"Saved to {out_dir}")
     return 0 if summary["errors"] == 0 else 1
+
+
+def _checked_content(args: argparse.Namespace):
+    content = load_content(_content_dir(args))
+    if any(i.level == "error" for i in check(content)):
+        print("Fix validation errors first (run `patternly validate`).", file=sys.stderr)
+        return None
+    return content
+
+
+def cmd_index(args: argparse.Namespace) -> int:
+    from .retrieval.models import LocalEmbedder
+    from .retrieval.store import connect, index_notes
+
+    content = _checked_content(args)
+    if content is None:
+        return 1
+    with connect() as conn:
+        n = index_notes(conn, content, LocalEmbedder())
+    print(f"Indexed {n} note sections from {len(content.notes)} notes")
+    return 0
+
+
+def _retriever(conn):
+    from .retrieval.models import LocalEmbedder, LocalReranker
+    from .retrieval.search import Retriever
+
+    return Retriever(conn, LocalEmbedder(), LocalReranker())
+
+
+def cmd_search(args: argparse.Namespace) -> int:
+    from .retrieval.store import connect
+
+    with connect() as conn:
+        for i, c in enumerate(_retriever(conn).search(args.query, args.method, args.limit), start=1):
+            print(f"{i:2}. {c.pattern} / {c.section}")
+    return 0
+
+
+def cmd_retrieval_eval(args: argparse.Namespace) -> int:
+    from .evals import retrieval
+    from .retrieval.models import EMBED_MODEL, RERANK_MODEL
+    from .retrieval.store import connect
+
+    content = _checked_content(args)
+    if content is None:
+        return 1
+    config = {
+        "label": args.label,
+        "split": "dev",
+        "embed_model": EMBED_MODEL,
+        "rerank_model": RERANK_MODEL,
+        "started_at": retrieval.now(),
+    }
+    with connect() as conn:
+        result = retrieval.run_retrieval_eval(_retriever(conn), content)
+    out_root = Path(args.out) if args.out else content.root.parent / "evals" / "runs"
+    out_dir = retrieval.save(result, config, out_root)
+    print((out_dir / "summary.md").read_text())
+    print(f"Saved to {out_dir}")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -167,8 +243,30 @@ def build_parser() -> argparse.ArgumentParser:
     ev.add_argument("--concurrency", type=int, default=8)
     ev.add_argument("--limit", type=int, help="only the first N answers (for a quick check)")
     ev.add_argument("--label", default="baseline", help="name for the results folder")
+    ev.add_argument(
+        "--notes",
+        default="none",
+        choices=["none", "hybrid-top3", "vector-top3", "keyword-top3"],
+        help="put retrieved pattern notes in the prompt (searched with the learner's answer); needs the database",
+    )
     ev.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
     ev.set_defaults(func=cmd_eval)
+
+    ix = sub.add_parser("index", help="embed the pattern notes into Postgres (run after editing notes)")
+    ix.set_defaults(func=cmd_index)
+
+    from .retrieval.search import METHODS
+
+    se = sub.add_parser("search", help="show the note sections retrieved for a query")
+    se.add_argument("query")
+    se.add_argument("--method", choices=METHODS, default="hybrid-rerank")
+    se.add_argument("--limit", type=int, default=5)
+    se.set_defaults(func=cmd_search)
+
+    re_ = sub.add_parser("retrieval-eval", help="measure note retrieval hit rate on development answers")
+    re_.add_argument("--label", default="retrieval")
+    re_.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
+    re_.set_defaults(func=cmd_retrieval_eval)
     return parser
 
 

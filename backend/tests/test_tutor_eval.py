@@ -183,3 +183,39 @@ def test_hint_leak_ignores_learners_own_words(one_scenario):
     assert hint_names_pattern(one_scenario, "s", "Have you tried the Hidden Trick?", "I'd loop over it")
     assert not hint_names_pattern(one_scenario, "s", "Is your hidden trick right?", "I'd use a hidden trick here")
     assert not hint_names_pattern(one_scenario, "s", "", "anything")
+
+
+def test_notes_go_into_prompt_only_when_given(one_scenario):
+    from patternly.tutor.baseline import NOTES_PROMPT, SYSTEM_PROMPT
+
+    s = one_scenario.scenarios["s"]
+    assert "<reference_notes>" not in build_user_message(s, "a")
+    msg = build_user_message(s, "a", ["# Note one", "# Note two"])
+    assert msg.startswith("<reference_notes>") and "<note>\n# Note two\n</note>" in msg
+
+    client = FakeClient(lambda _msg: grade({"idea-a": True, "idea-b": True}))
+    grade_answer(client, s, "a")
+    grade_answer(client, s, "a", notes=["# Note"])
+    assert client.messages.calls[0]["system"] == SYSTEM_PROMPT
+    assert client.messages.calls[1]["system"] == SYSTEM_PROMPT + NOTES_PROMPT
+
+
+def test_run_eval_passes_retrieved_notes(content_dir, tmp_path):
+    content_dir.full()
+    notes_dir = content_dir.root / "notes"
+    notes_dir.mkdir()
+    for p in range(5):
+        content_dir.raw(f"notes/pat-{p}.md", f"# Pattern {p}\n\n## Steps\n\nNOTE-{p}\n")
+    content = load_content(content_dir.root)
+    seen = []
+
+    def decide(msg):
+        seen.append(msg)
+        return grade({"idea-a": True, "idea-b": True})
+
+    retrieved = {la.key: ["pat-3"] for la in content.dev_answers()}
+    config = EvalConfig(label="t", split="dev", runs=1, model="m", effort="low", limit=2, grounding="test")
+    out_dir, _ = run_eval(FakeClient(decide), content, config, tmp_path, retrieved=retrieved)
+    assert len(seen) == 2 and all("NOTE-3" in m for m in seen)
+    meta = json.loads((out_dir / "config.json").read_text())
+    assert meta["grounding"] == "test" and len(meta["retrieved"]) == 2

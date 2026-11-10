@@ -203,3 +203,42 @@ def test_exactly_three_hints(content_dir, n):
     s["hints"] = [f"Hint {i}." for i in range(n)]
     content_dir.scenario(s)
     assert any("[hints]" in e for e in errors(content_dir))
+
+
+GOOD_NOTE = "# P\n\n" + "".join(
+    f"## {h}\n\nPlaceholder.\n\n"
+    for h in ["When to reach for it", "The idea", "Steps", "Cost", "Common mistakes", "Easily confused with"]
+)
+
+
+def test_notes_are_parsed_and_checked(content_dir):
+    content_dir.patterns([{"id": "p", "name": "P"}, {"id": "q", "name": "Q"}])
+    (content_dir.root / "notes").mkdir()
+    content_dir.raw("notes/p.md", GOOD_NOTE)
+    content_dir.raw("notes/q.md", "# Wrong\n\n## Steps\n\nOne.\n")
+    content_dir.raw("notes/zzz.md", GOOD_NOTE)
+    content = load_content(content_dir.root)
+    assert content.notes["p"].sections["Steps"] == "Placeholder."
+    errs = errors(content_dir)
+    assert not any("notes/p.md" in e for e in errs)
+    assert any("notes/q.md" in e and "should be the pattern name" in e for e in errs)
+    assert any("notes/q.md" in e and "'Common mistakes'" in e for e in errs)
+    assert any("notes/zzz.md" in e and "no pattern" in e for e in errs)
+
+
+def test_missing_note_is_an_error_once_notes_exist(content_dir):
+    content_dir.patterns([{"id": "p", "name": "P"}])
+    assert errors(content_dir) == []
+    (content_dir.root / "notes").mkdir()
+    assert any("no note for pattern 'p'" in e for e in errors(content_dir))
+
+
+def test_chunks_from_notes_one_per_section(content_dir):
+    from patternly.retrieval.store import chunks_from_notes
+
+    content_dir.patterns([{"id": "p", "name": "P"}])
+    (content_dir.root / "notes").mkdir()
+    content_dir.raw("notes/p.md", GOOD_NOTE)
+    chunks = chunks_from_notes(load_content(content_dir.root))
+    assert len(chunks) == 6
+    assert chunks[0].text.startswith("P: When to reach for it")

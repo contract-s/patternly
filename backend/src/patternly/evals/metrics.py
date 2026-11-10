@@ -151,7 +151,7 @@ def render_markdown(summary: dict, config: dict) -> str:
         "",
         f"- Split: **{config['split']}**, {summary['answers']} answers × {summary['runs']} runs "
         f"= {summary['calls']} calls ({summary['errors']} errors)",
-        f"- Model: `{config['model']}`, effort `{config['effort']}`",
+        f"- Model: `{config['model']}`, effort `{config['effort']}`, notes: {config.get('grounding', 'none')}",
         f"- Date: {config['started_at']}",
         "",
         "| Metric | Result | Per-run sample size |",

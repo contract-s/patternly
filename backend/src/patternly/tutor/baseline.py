@@ -1,7 +1,7 @@
 """Weekend 2 baseline tutor: one prompt with the scenario, rubric, and answer; structured output back.
 
-Deliberately simple. No retrieval, no tools, no leak checker. It's the number later weekends
-have to beat.
+Deliberately simple. No tools, no leak checker. It's the number later weekends have to beat.
+Weekend 3 adds one option: pass retrieved pattern notes and they go into the prompt as reference.
 """
 
 from __future__ import annotations
@@ -52,6 +52,16 @@ Hint:
   thing they missed or got wrong. Ask a question or point at what to notice. Don't name the
   algorithm or pattern, don't give the full solution, and don't mention the rubric.
 - If the verdict is pass, the hint is an empty string.
+"""
+
+
+NOTES_PROMPT = """
+Reference notes:
+- You may also get reference notes about algorithm patterns, found by searching for the learner's
+  explanation. They may or may not describe the approach this scenario expects.
+- Use them to recognize correct ideas stated in unfamiliar words and to spot the common mistakes
+  they list. Grade against the rubric, not against the notes.
+- The notes name patterns. Never put a pattern name or alias from the notes in your hint.
 """
 
 
@@ -137,11 +147,15 @@ class MessagesClient(Protocol):
     def messages(self): ...
 
 
-def build_user_message(scenario: Scenario, answer_text: str) -> str:
+def build_user_message(scenario: Scenario, answer_text: str, notes: list[str] | None = None) -> str:
     # The pattern name and reference solution are left out on purpose: the grader should judge
     # against the rubric, and can't leak a name it was never given.
     rubric = "\n".join(f"- {item.id}: {item.idea}" for item in scenario.rubric)
-    return (
+    reference = ""
+    if notes:
+        reference = "".join(f"<note>\n{n.strip()}\n</note>\n" for n in notes)
+        reference = f"<reference_notes>\n{reference}</reference_notes>\n\n"
+    return reference + (
         f"<scenario>\n{scenario.title}\n\n{scenario.prompt.strip()}\n</scenario>\n\n"
         f"<rubric>\n{rubric}\n</rubric>\n\n"
         f"<learner_explanation>\n{answer_text.strip()}\n</learner_explanation>"
@@ -170,15 +184,16 @@ def grade_answer(
     *,
     model: str = DEFAULT_MODEL,
     effort: str = DEFAULT_EFFORT,
+    notes: list[str] | None = None,
 ) -> tuple[Grade, Usage]:
     started = time.perf_counter()
     response = client.messages.parse(
         model=model,
         max_tokens=MAX_TOKENS,
-        system=SYSTEM_PROMPT,
+        system=SYSTEM_PROMPT + NOTES_PROMPT if notes else SYSTEM_PROMPT,
         output_config={"effort": effort},
         output_format=output_model(scenario),
-        messages=[{"role": "user", "content": build_user_message(scenario, answer_text)}],
+        messages=[{"role": "user", "content": build_user_message(scenario, answer_text, notes)}],
     )
     usage = Usage(
         input_tokens=response.usage.input_tokens,

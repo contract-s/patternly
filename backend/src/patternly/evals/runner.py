@@ -24,6 +24,7 @@ class EvalConfig:
     effort: str
     concurrency: int = 8
     limit: int | None = None  # first N answers only, for smoke tests
+    grounding: str = "none"  # "none", or how notes were retrieved (e.g. "hybrid-top3")
 
 
 def select_answers(content: Content, split: str, limit: int | None) -> list[LabeledAnswer]:
@@ -36,9 +37,12 @@ def select_answers(content: Content, split: str, limit: int | None) -> list[Labe
     return answers[:limit] if limit else answers
 
 
-def _record(la: LabeledAnswer, run: int, content: Content, grade, usage, error: str | None) -> dict:
+def _record(
+    la: LabeledAnswer, run: int, content: Content, grade, usage, error: str | None, retrieved: list[str] | None
+) -> dict:
     return {
         "key": la.key,
+        "retrieved": retrieved,
         "run": run,
         "scenario": la.scenario.id,
         "kind": la.answer.kind.value,
@@ -65,13 +69,17 @@ def run_eval(
     config: EvalConfig,
     out_root: Path,
     progress: Callable[[int, int], None] | None = None,
+    retrieved: dict[str, list[str]] | None = None,
 ) -> tuple[Path, dict]:
+    """`retrieved` maps answer key -> pattern ids whose notes go into the prompt (None: no notes)."""
     answers = select_answers(content, config.split, config.limit)
     jobs = [(la, run) for run in range(1, config.runs + 1) for la in answers]
     started_at = datetime.now().isoformat(timespec="seconds")
     out_dir = out_root / f"{started_at.replace(':', '')}_{config.label}"
     out_dir.mkdir(parents=True, exist_ok=False)
     meta = {**config.__dict__, "started_at": started_at, "answers": [la.key for la in answers]}
+    if retrieved is not None:
+        meta["retrieved"] = {la.key: retrieved[la.key] for la in answers}
     (out_dir / "config.json").write_text(json.dumps(meta, indent=2))
 
     records: list[dict] = []
@@ -79,13 +87,17 @@ def run_eval(
     calls_file = (out_dir / "calls.jsonl").open("w")
 
     def work(la: LabeledAnswer, run: int) -> dict:
+        pids = retrieved[la.key] if retrieved is not None else None
+        notes = [content.notes[p].text for p in pids] if pids else None
         try:
-            grade, usage = grade_answer(client, la.scenario, la.answer.text, model=config.model, effort=config.effort)
-            return _record(la, run, content, grade, usage, None)
+            grade, usage = grade_answer(
+                client, la.scenario, la.answer.text, model=config.model, effort=config.effort, notes=notes
+            )
+            return _record(la, run, content, grade, usage, None, pids)
         except GradeError as e:
-            return _record(la, run, content, None, e.usage, str(e))
+            return _record(la, run, content, None, e.usage, str(e), pids)
         except Exception as e:  # API errors after the SDK's own retries: keep going, count it
-            return _record(la, run, content, None, None, f"{type(e).__name__}: {e}")
+            return _record(la, run, content, None, None, f"{type(e).__name__}: {e}", pids)
 
     try:
         with ThreadPoolExecutor(max_workers=config.concurrency) as pool:

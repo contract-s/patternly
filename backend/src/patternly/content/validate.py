@@ -6,7 +6,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
-from .loader import ANSWERS_DIR, SCENARIOS_DIR, SPLIT_FILE, Content, Issue
+from .loader import ANSWERS_DIR, NOTES_DIR, SCENARIOS_DIR, SPLIT_FILE, Content, Issue
 from .models import AnswerKind, Label, Verdict
 
 # Weekend 1 targets from the project plan.
@@ -14,6 +14,9 @@ TARGET_PATTERNS = 5
 TARGET_SCENARIOS = 10
 ANSWERS_PER_SCENARIO = len(AnswerKind)  # one of each kind
 TARGET_SEALED = 20
+
+# Every pattern note needs these sections, in any order.
+NOTE_SECTIONS = ["When to reach for it", "The idea", "Steps", "Cost", "Common mistakes", "Easily confused with"]
 
 
 def _mentions(text: str, phrase: str) -> bool:
@@ -67,6 +70,23 @@ def check(content: Content) -> list[Issue]:
         absent = [k.value for k in AnswerKind if kinds[k] == 0]
         if absent:
             issues.append(Issue("warning", where, f"missing answer kinds: {', '.join(absent)}"))
+
+    if content.has_notes_dir:
+        for pid, pattern in sorted(content.patterns.items()):
+            note = content.notes.get(pid)
+            where = f"{NOTES_DIR}/{pid}.md"
+            if note is None:
+                issues.append(Issue("error", where, f"no note for pattern '{pid}'"))
+                continue
+            if note.title != pattern.name:
+                issues.append(
+                    Issue("error", where, f"title '{note.title}' should be the pattern name '{pattern.name}'")
+                )
+            for heading in NOTE_SECTIONS:
+                if not note.sections.get(heading):
+                    issues.append(Issue("error", where, f"missing or empty section '{heading}'"))
+        for pid in sorted(set(content.notes) - set(content.patterns)):
+            issues.append(Issue("error", f"{NOTES_DIR}/{pid}.md", f"no pattern with id '{pid}'"))
 
     if content.split is not None:
         known = {la.key for la in content.all_answers()}

@@ -1,0 +1,255 @@
+{
+  "label": "notes-hybrid-top3",
+  "split": "dev",
+  "runs": 5,
+  "model": "claude-opus-5-5",
+  "effort": "medium",
+  "concurrency": 8,
+  "limit": null,
+  "grounding": "hybrid-top3",
+  "started_at": "2026-11-09T20:10:33",
+  "answers": [
+    "course-prerequisite-plan/correct",
+    "course-prerequisite-plan/missing-key-idea",
+    "course-prerequisite-plan/wrong-pattern",
+    "course-prerequisite-plan/vague",
+    "delivery-failed-payments/partial",
+    "delivery-failed-payments/missing-key-idea",
+    "delivery-failed-payments/wrong-pattern",
+    "delivery-failed-payments/alternative",
+    "fastest-delivery-routes/partial",
+    "fastest-delivery-routes/missing-key-idea",
+    "fastest-delivery-routes/vague",
+    "fastest-delivery-routes/alternative",
+    "fewest-metro-transfers/correct",
+    "fewest-metro-transfers/missing-key-idea",
+    "fewest-metro-transfers/wrong-pattern",
+    "fewest-metro-transfers/alternative",
+    "fewest-postage-stamps/correct",
+    "fewest-postage-stamps/wrong-pattern",
+    "fewest-postage-stamps/vague",
+    "fewest-postage-stamps/alternative",
+    "first-broken-build/partial",
+    "first-broken-build/missing-key-idea",
+    "first-broken-build/vague",
+    "first-broken-build/alternative",
+    "ranking-disagreements/correct",
+    "ranking-disagreements/partial",
+    "ranking-disagreements/wrong-pattern",
+    "ranking-disagreements/vague",
+    "rural-fiber-network/correct",
+    "rural-fiber-network/missing-key-idea",
+    "rural-fiber-network/wrong-pattern",
+    "rural-fiber-network/alternative",
+    "spreadsheet-circular-reference/partial",
+    "spreadsheet-circular-reference/wrong-pattern",
+    "spreadsheet-circular-reference/vague",
+    "spreadsheet-circular-reference/alternative",
+    "trending-hashtags/correct",
+    "trending-hashtags/partial",
+    "trending-hashtags/missing-key-idea",
+    "trending-hashtags/vague"
+  ],
+  "retrieved": {
+    "course-prerequisite-plan/correct": [
+      "topological-sort",
+      "bfs",
+      "dijkstra"
+    ],
+    "course-prerequisite-plan/missing-key-idea": [
+      "topological-sort",
+      "prefix-sum",
+      "bfs"
+    ],
+    "course-prerequisite-plan/wrong-pattern": [
+      "topological-sort",
+      "merge-sort",
+      "quicksort"
+    ],
+    "course-prerequisite-plan/vague": [
+      "topological-sort",
+      "backtracking",
+      "bfs"
+    ],
+    "delivery-failed-payments/partial": [
+      "sliding-window",
+      "dfs",
+      "monotonic-stack"
+    ],
+    "delivery-failed-payments/missing-key-idea": [
+      "prefix-sum",
+      "monotonic-stack",
+      "sliding-window"
+    ],
+    "delivery-failed-payments/wrong-pattern": [
+      "quicksort",
+      "merge-sort",
+      "dutch-national-flag"
+    ],
+    "delivery-failed-payments/alternative": [
+      "prefix-sum",
+      "sliding-window",
+      "quicksort"
+    ],
+    "fastest-delivery-routes/partial": [
+      "dijkstra",
+      "bfs",
+      "kruskal"
+    ],
+    "fastest-delivery-routes/missing-key-idea": [
+      "dijkstra",
+      "bfs",
+      "topological-sort"
+    ],
+    "fastest-delivery-routes/vague": [
+      "dijkstra",
+      "dfs",
+      "bfs"
+    ],
+    "fastest-delivery-routes/alternative": [
+      "heap",
+      "dijkstra",
+      "monotonic-stack"
+    ],
+    "fewest-metro-transfers/correct": [
+      "bfs",
+      "dfs",
+      "dijkstra"
+    ],
+    "fewest-metro-transfers/missing-key-idea": [
+      "bfs",
+      "topological-sort",
+      "dfs"
+    ],
+    "fewest-metro-transfers/wrong-pattern": [
+      "dfs",
+      "kruskal",
+      "backtracking"
+    ],
+    "fewest-metro-transfers/alternative": [
+      "dijkstra",
+      "bfs",
+      "kruskal"
+    ],
+    "fewest-postage-stamps/correct": [
+      "dynamic-programming",
+      "binary-search",
+      "prefix-sum"
+    ],
+    "fewest-postage-stamps/wrong-pattern": [
+      "monotonic-stack",
+      "prefix-sum",
+      "dijkstra"
+    ],
+    "fewest-postage-stamps/vague": [
+      "dynamic-programming",
+      "quicksort",
+      "binary-search"
+    ],
+    "fewest-postage-stamps/alternative": [
+      "bfs",
+      "topological-sort",
+      "dijkstra"
+    ],
+    "first-broken-build/partial": [
+      "binary-search",
+      "dfs",
+      "backtracking"
+    ],
+    "first-broken-build/missing-key-idea": [
+      "binary-search",
+      "backtracking",
+      "monotonic-stack"
+    ],
+    "first-broken-build/vague": [
+      "backtracking",
+      "binary-search",
+      "topological-sort"
+    ],
+    "first-broken-build/alternative": [
+      "binary-search",
+      "prefix-sum",
+      "topological-sort"
+    ],
+    "ranking-disagreements/correct": [
+      "merge-sort",
+      "quicksort",
+      "monotonic-stack"
+    ],
+    "ranking-disagreements/partial": [
+      "merge-sort",
+      "topological-sort",
+      "quicksort"
+    ],
+    "ranking-disagreements/wrong-pattern": [
+      "sliding-window",
+      "merge-sort",
+      "topological-sort"
+    ],
+    "ranking-disagreements/vague": [
+      "quicksort",
+      "merge-sort",
+      "dutch-national-flag"
+    ],
+    "rural-fiber-network/correct": [
+      "kruskal",
+      "merge-sort",
+      "quicksort"
+    ],
+    "rural-fiber-network/missing-key-idea": [
+      "kruskal",
+      "dfs",
+      "merge-sort"
+    ],
+    "rural-fiber-network/wrong-pattern": [
+      "dijkstra",
+      "kruskal",
+      "bfs"
+    ],
+    "rural-fiber-network/alternative": [
+      "kruskal",
+      "dijkstra",
+      "bfs"
+    ],
+    "spreadsheet-circular-reference/partial": [
+      "bfs",
+      "dfs",
+      "topological-sort"
+    ],
+    "spreadsheet-circular-reference/wrong-pattern": [
+      "merge-sort",
+      "quicksort",
+      "topological-sort"
+    ],
+    "spreadsheet-circular-reference/vague": [
+      "bfs",
+      "sliding-window",
+      "prefix-sum"
+    ],
+    "spreadsheet-circular-reference/alternative": [
+      "prefix-sum",
+      "topological-sort",
+      "monotonic-stack"
+    ],
+    "trending-hashtags/correct": [
+      "heap",
+      "merge-sort",
+      "prefix-sum"
+    ],
+    "trending-hashtags/partial": [
+      "prefix-sum",
+      "topological-sort",
+      "heap"
+    ],
+    "trending-hashtags/missing-key-idea": [
+      "heap",
+      "prefix-sum",
+      "merge-sort"
+    ],
+    "trending-hashtags/vague": [
+      "heap",
+      "quicksort",
+      "prefix-sum"
+    ]
+  }
+}
