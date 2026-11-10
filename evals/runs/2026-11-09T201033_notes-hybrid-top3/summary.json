@@ -1,0 +1,142 @@
+{
+  "runs": 5,
+  "calls": 200,
+  "errors": 0,
+  "answers": 40,
+  "metrics": {
+    "rubric_item_accuracy": {
+      "mean": 0.9758928571428571,
+      "min": 0.96875,
+      "max": 0.9821428571428571,
+      "stdev": 0.005090068862049705
+    },
+    "false_pass_rate": {
+      "mean": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "stdev": 0.0
+    },
+    "false_fail_rate": {
+      "mean": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "stdev": 0.0
+    },
+    "alternative_accept_rate": {
+      "mean": 1.0,
+      "min": 1.0,
+      "max": 1.0,
+      "stdev": 0.0
+    },
+    "hint_names_pattern_rate": {
+      "mean": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "stdev": 0.0
+    }
+  },
+  "per_run": {
+    "1": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9821428571428571,
+      "tutor_hit_label_miss": 3,
+      "tutor_miss_label_hit": 1,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.0,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.0,
+      "alternatives": 7,
+      "alternative_accept_rate": 1.0,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.0
+    },
+    "2": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9732142857142857,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 2,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.0,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.0,
+      "alternatives": 7,
+      "alternative_accept_rate": 1.0,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.0
+    },
+    "3": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9776785714285714,
+      "tutor_hit_label_miss": 3,
+      "tutor_miss_label_hit": 2,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.0,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.0,
+      "alternatives": 7,
+      "alternative_accept_rate": 1.0,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.0
+    },
+    "4": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.9776785714285714,
+      "tutor_hit_label_miss": 3,
+      "tutor_miss_label_hit": 2,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.0,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.0,
+      "alternatives": 7,
+      "alternative_accept_rate": 1.0,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.0
+    },
+    "5": {
+      "answers_graded": 40,
+      "errors": 0,
+      "rubric_items": 224,
+      "rubric_item_accuracy": 0.96875,
+      "tutor_hit_label_miss": 4,
+      "tutor_miss_label_hit": 3,
+      "labeled_fail": 27,
+      "false_pass_rate": 0.0,
+      "labeled_pass": 13,
+      "false_fail_rate": 0.0,
+      "alternatives": 7,
+      "alternative_accept_rate": 1.0,
+      "hints_given": 27,
+      "hint_names_pattern_rate": 0.0
+    }
+  },
+  "tutor_pass_rate_by_kind": {
+    "alternative": 1.0,
+    "correct": 1.0,
+    "missing_key_idea": 0.0,
+    "partial": 0.0,
+    "vague": 0.0,
+    "wrong_pattern": 0.0
+  },
+  "verdict_flips": {
+    "answers": 0,
+    "keys": []
+  },
+  "cost": {
+    "total_usd": 5.49014,
+    "per_call_usd": 0.0274507,
+    "mean_input_tokens": 4489.025,
+    "mean_output_tokens": 474.73
+  },
+  "latency_s": {
+    "p50": 4.807794874999672,
+    "p95": 9.160501000005752
+  }
+}

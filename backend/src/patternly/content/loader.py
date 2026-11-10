@@ -9,12 +9,13 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from .models import Answer, AnswerSet, Pattern, Scenario, Split, answer_key
+from .models import Answer, AnswerSet, Note, Pattern, Scenario, Split, answer_key
 
 PATTERNS_FILE = "patterns.yaml"
 SPLIT_FILE = "splits.yaml"
 SCENARIOS_DIR = "scenarios"
 ANSWERS_DIR = "answers"
+NOTES_DIR = "notes"
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,9 @@ class Content:
     scenarios: dict[str, Scenario] = field(default_factory=dict)
     answer_sets: dict[str, AnswerSet] = field(default_factory=dict)
     split: Split | None = None
+    # pattern id -> note. Empty when content/notes/ doesn't exist.
+    notes: dict[str, Note] = field(default_factory=dict)
+    has_notes_dir: bool = False
     issues: list[Issue] = field(default_factory=list)
 
     def all_answers(self) -> list[LabeledAnswer]:
@@ -151,6 +155,16 @@ def load_content(root: Path) -> Content:
         if a.scenario in content.answer_sets:
             content.issues.append(Issue("error", _rel(path, content), f"second answer file for '{a.scenario}'"))
         content.answer_sets[a.scenario] = a
+
+    notes_dir = root / NOTES_DIR
+    content.has_notes_dir = notes_dir.is_dir()
+    if content.has_notes_dir:
+        for path in sorted(notes_dir.glob("*.md")):
+            if path.name.startswith("_") or path.name == "README.md":
+                continue
+            note = _parse(Note, Note.parse(path.stem, path.read_text(encoding="utf-8")).model_dump(), path, content)
+            if note is not None:
+                content.notes[note.pattern] = note
 
     split_path = root / SPLIT_FILE
     if split_path.is_file():

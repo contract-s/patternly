@@ -24,6 +24,35 @@ class Pattern(Strict):
     summary: str | None = None
 
 
+class Note(Strict):
+    """A pattern note: Markdown with a `# title` and `## section` headings. Retrieved to ground the tutor."""
+
+    pattern: str = Field(pattern=SLUG)
+    title: str
+    # heading -> body text, in file order
+    sections: dict[str, str]
+    text: str
+
+    @classmethod
+    def parse(cls, pattern: str, text: str) -> Note:
+        title = ""
+        sections: dict[str, list[str]] = {}
+        current: list[str] | None = None
+        for line in text.splitlines():
+            if line.startswith("# ") and not title:
+                title = line[2:].strip()
+            elif line.startswith("## "):
+                current = sections.setdefault(line[3:].strip(), [])
+            elif current is not None:
+                current.append(line)
+        return cls(
+            pattern=pattern,
+            title=title,
+            sections={h: "\n".join(body).strip() for h, body in sections.items()},
+            text=text,
+        )
+
+
 class RubricItem(Strict):
     id: str = Field(pattern=SLUG)
     idea: str = Field(min_length=1)
