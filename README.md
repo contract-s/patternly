@@ -2,7 +2,7 @@
 
 Learn algorithm patterns by explaining first. One lesson a day: read a real-world scenario, describe your solution in plain words, and an AI tutor tells you which key ideas you hit, which you missed, and gives a hint without giving away the answer. Cover the key ideas and it reveals the pattern.
 
-> Status: Weekend 2 (baseline tutor) done; Weekend 3 (pattern notes and retrieval) done; Weekend 4 (tool-using tutor, hint ladder, leak checker) done. 15 patterns, 30 scenarios, and 60 labeled learner answers for 10 of them (20 sealed for final metrics), plus a baseline grader measured on the 40 development answers. See [docs/project-plan.md](docs/project-plan.md).
+> Status: Weekend 2 (baseline tutor) done; Weekend 3 (pattern notes and retrieval) done; Weekend 4 (tool-using tutor, hint ladder, leak checker) done; Weekend 5 (learning engine and API) done. 15 patterns, 30 scenarios, and 60 labeled learner answers for 10 of them (20 sealed for final metrics), plus a baseline grader measured on the 40 development answers. See [docs/project-plan.md](docs/project-plan.md).
 
 ## Results
 
@@ -126,6 +126,38 @@ hint (94 attempts). Run:
 The 0 delivered leaks is measured by the same checker that gates the hints, so it shows the guardrail works, not
 that the hints are leak-free; the first-draft rate is the better measure of how often the model leaks. Grading
 is one run, so the accuracy difference from the baseline is within run-to-run noise.
+
+## Running the API
+
+```
+docker compose up -d                 # Postgres + pgvector on port 5433
+cp backend/.env.example backend/.env # add ANTHROPIC_API_KEY and JWT_SECRET
+cd backend && uv run patternly serve # http://127.0.0.1:8000/docs
+```
+
+| Endpoint | What it does |
+|---|---|
+| `POST /auth/register`, `POST /auth/login` | Email, password, and IANA time zone; returns a bearer token (JWT, 7 days) |
+| `GET /me` | The learner and their streak |
+| `GET /lessons/today` | Today's lesson, picked on the first request of the learner's local day |
+| `POST /lessons/today/attempts` | Grades an explanation: ideas hit (missed ones stay hidden), a hint, and the reveal when the lesson ends |
+| `GET /reviews` | Patterns due for review and upcoming ones |
+
+How a day works:
+
+- **Planner.** An overdue review comes first (the lowest box among the most overdue), then the next new
+  pattern in `patterns.yaml` order, then extra practice. A review uses a scenario the learner hasn't seen if
+  there is one.
+- **Lesson.** Up to 4 attempts. Hints climb from level 1 to 3. A pass reveals the pattern; after the 4th failed
+  attempt it's revealed anyway and counted as missed.
+- **Spaced repetition.** Leitner boxes per pattern, reviewed after 1, 2, 4, 8, or 16 days. Solving on the
+  first try moves a pattern up a box, needing hints keeps it in place, and a miss sends it back to box 1, so it
+  returns the next day.
+- **Streak.** Days in a row with a finished lesson, in the learner's time zone. Every 7 in a row earns a streak
+  freeze (at most 2), used up automatically to cover a missed day.
+
+Tests (`uv run pytest`) run the whole flow through the API with a fake tutor against a scratch database:
+a full lesson, the streak growing across days, and a missed pattern coming back in the review queue.
 
 ## Limits
 
