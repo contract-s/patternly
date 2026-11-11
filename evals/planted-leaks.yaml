@@ -1,0 +1,214 @@
+# Hints written on purpose to give too much away, to test the leak checker.
+#
+# kind: the leak the checker should catch.
+#   pattern-name     names the scenario's pattern or an alias the learner didn't write
+#   copied-solution  copies 8+ consecutive words of the reference solution
+#   revealed-steps   states more missed rubric ideas than the hint level allows (needs the judge)
+#   none             tricky but fine; the checker should not flag it
+# level: the hint level the hint was given at (1 nudge, 2 shape, 3 strong clue).
+# learner_text: what the learner wrote (default empty). missed: rubric ids not yet stated (default all).
+
+leaks:
+# autocorrect-edit-distance (dynamic programming)
+- scenario: autocorrect-edit-distance
+  level: 1
+  kind: pattern-name
+  hint: This is a classic dynamic programming problem. What smaller question could you answer first?
+- scenario: autocorrect-edit-distance
+  level: 2
+  kind: copied-solution
+  hint: Try this. If typed[i-1] == target[j-1], copy d[i-1][j-1]; otherwise think about your options.
+- scenario: autocorrect-edit-distance
+  level: 1
+  kind: revealed-steps
+  hint: Each cell should be 1 plus the smallest of the cell above, the cell to the left, and the diagonal when the letters differ.
+- scenario: autocorrect-edit-distance
+  level: 3
+  kind: revealed-steps
+  missed: [match-case, three-ops]
+  hint: When the last letters match, the answer is the same as for both words without that letter. When they don't, take 1 plus the cheapest of deleting, inserting, or replacing.
+- scenario: autocorrect-edit-distance
+  level: 2
+  kind: none
+  learner_text: I'd use memoization on a recursive function over the two words.
+  hint: Your memoization idea works. What exactly does one cached value mean, in terms of how much of each word it covers?
+
+# course-prerequisite-plan (topological sort)
+- scenario: course-prerequisite-plan
+  level: 1
+  kind: pattern-name
+  hint: Have you heard of Kahn's algorithm? Which courses could a student take on day one?
+- scenario: course-prerequisite-plan
+  level: 2
+  kind: copied-solution
+  hint: Repeatedly remove one, append it to the plan, and decrement the counts of the courses that depend on it.
+- scenario: course-prerequisite-plan
+  level: 1
+  kind: revealed-steps
+  hint: Count how many unmet prerequisites each course still has.
+- scenario: course-prerequisite-plan
+  level: 2
+  kind: revealed-steps
+  hint: Start with every course whose prerequisite count is zero. When you take one, lower the count of each course that needed it, and any that reach zero become available.
+
+# days-until-warmer (monotonic stack)
+- scenario: days-until-warmer
+  level: 2
+  kind: pattern-name
+  hint: A monotone stack fits here. What should the days waiting on it have in common?
+- scenario: days-until-warmer
+  level: 3
+  kind: copied-solution
+  hint: For day i, while the stack isn't empty and temp[i] is greater than temp at the top, you resolve something.
+- scenario: days-until-warmer
+  level: 1
+  kind: revealed-steps
+  hint: Keep a stack of the days still waiting for a warmer day.
+- scenario: days-until-warmer
+  level: 2
+  kind: revealed-steps
+  hint: Keep the waiting days on a stack. When a warmer day arrives, pop each cooler day off the top and set its answer to the gap in day numbers, then push the new day.
+- scenario: days-until-warmer
+  level: 2
+  kind: none
+  learner_text: I'd keep a stack of the days that haven't found a warmer day yet.
+  missed: [decreasing-order, pop-on-warmer, push-current, leftovers-zero, linear]
+  hint: Good, keep that stack. When a new day shows up, which of the waiting days does it answer, and where are they on the stack?
+
+# fastest-delivery-routes (Dijkstra's algorithm)
+- scenario: fastest-delivery-routes
+  level: 1
+  kind: pattern-name
+  hint: This is what Dijkstra designed his method for. Which address do you know the time to for sure first?
+- scenario: fastest-delivery-routes
+  level: 2
+  kind: copied-solution
+  hint: Think about checking each road. If dist[node] + time < dist[neighbor], update dist[neighbor] and push it.
+- scenario: fastest-delivery-routes
+  level: 1
+  kind: revealed-steps
+  hint: Always take the unfinished intersection with the smallest known time next, using a min-priority queue.
+- scenario: fastest-delivery-routes
+  level: 3
+  kind: revealed-steps
+  missed: [min-queue, relax]
+  hint: Use a min-priority queue to always take the unfinished node with the smallest time, and for each road out of it, lower the neighbor's time if going through this node is faster.
+
+# first-broken-build (binary search)
+- scenario: first-broken-build
+  level: 1
+  kind: pattern-name
+  hint: Have you tried a bisect over the builds? What do you learn from testing one build?
+- scenario: first-broken-build
+  level: 3
+  kind: copied-solution
+  hint: If mid is broken, set high = mid, since the first broken build is mid or earlier.
+- scenario: first-broken-build
+  level: 1
+  kind: revealed-steps
+  hint: Test the build in the middle of the range you still have.
+- scenario: first-broken-build
+  level: 2
+  kind: revealed-steps
+  hint: Test the middle build. If it's broken, the first broken build is it or earlier, so drop the later half; if it's good, drop the earlier half.
+- scenario: first-broken-build
+  level: 1
+  kind: none
+  hint: Builds go from good to broken and never back. What does that tell you after testing a single build?
+
+# largest-billboard-banner (monotonic stack)
+- scenario: largest-billboard-banner
+  level: 2
+  kind: pattern-name
+  hint: Use a monotonic stack. Which buildings still matter when a shorter one shows up?
+- scenario: largest-billboard-banner
+  level: 3
+  kind: copied-solution
+  hint: Pop the top; its width is i if the stack is now empty, else i - stack_top - 1.
+- scenario: largest-billboard-banner
+  level: 1
+  kind: revealed-steps
+  hint: For each building used as the banner's height, the banner stretches until the nearest shorter building on each side.
+- scenario: largest-billboard-banner
+  level: 2
+  kind: revealed-steps
+  hint: Keep a stack of buildings in increasing height. When a shorter one arrives, each taller building you pop has found its right edge, and the building under it on the stack is its left edge.
+
+# ranking-disagreements (merge sort)
+- scenario: ranking-disagreements
+  level: 1
+  kind: pattern-name
+  hint: Mergesort can do more than sort. What could you count while it runs?
+- scenario: ranking-disagreements
+  level: 2
+  kind: copied-solution
+  hint: When the next smallest comes from the right half, every item left in the left half is bigger and earlier.
+- scenario: ranking-disagreements
+  level: 1
+  kind: revealed-steps
+  hint: Relabel films by critic A's rank and list them in critic B's order. Then you're counting out-of-order pairs.
+- scenario: ranking-disagreements
+  level: 3
+  kind: revealed-steps
+  missed: [divide, count-while-merging]
+  hint: Split the list in half and count each half recursively. While merging the sorted halves, each time you take from the right half, add how many items are still waiting in the left half.
+
+# rural-fiber-network (Kruskal's algorithm)
+- scenario: rural-fiber-network
+  level: 2
+  kind: pattern-name
+  hint: You're building a minimum spanning tree. Which cable would you consider first?
+- scenario: rural-fiber-network
+  level: 2
+  kind: copied-solution
+  hint: For each cable from cheapest up, if its two towns are in different groups, do something.
+- scenario: rural-fiber-network
+  level: 1
+  kind: revealed-steps
+  hint: Sort the cables from cheapest to most expensive.
+- scenario: rural-fiber-network
+  level: 2
+  kind: revealed-steps
+  hint: Go through cables from cheapest up and lay one only if its towns aren't already connected, using a union-find structure to check and merge groups.
+- scenario: rural-fiber-network
+  level: 1
+  kind: none
+  learner_text: I'd find a spanning tree by starting at one town and adding the nearest town each time.
+  hint: Your spanning tree idea is a fine goal. How would you know the nearest town quickly as the connected group grows?
+
+# spreadsheet-circular-reference (depth-first search)
+- scenario: spreadsheet-circular-reference
+  level: 1
+  kind: pattern-name
+  hint: A DFS might help. What would it mean to come back to a cell you're still working on?
+- scenario: spreadsheet-circular-reference
+  level: 3
+  kind: copied-solution
+  hint: For each cell it reads, if that cell is visiting there's a loop.
+- scenario: spreadsheet-circular-reference
+  level: 1
+  kind: revealed-steps
+  hint: Track three states per cell, not started, in progress, and finished.
+- scenario: spreadsheet-circular-reference
+  level: 2
+  kind: revealed-steps
+  hint: Give each cell a state of not started, in progress, or finished, and report a loop when you reach a cell that's in progress.
+
+# ticket-priority-many-duplicates (quicksort)
+- scenario: ticket-priority-many-duplicates
+  level: 2
+  kind: pattern-name
+  hint: Your quick sort is fine in general. What happens to all the equal tickets when you split?
+- scenario: ticket-priority-many-duplicates
+  level: 3
+  kind: copied-solution
+  hint: Values below the pivot are swapped to low, values above are swapped to high.
+- scenario: ticket-priority-many-duplicates
+  level: 1
+  kind: revealed-steps
+  hint: Partition each range into smaller than, equal to, and greater than the pivot in one pass.
+- scenario: ticket-priority-many-duplicates
+  level: 3
+  kind: revealed-steps
+  missed: [three-groups, skip-equal]
+  hint: Split each range into below, equal to, and above the pivot in one pass, then recurse only on the below and above parts, never the equal block.

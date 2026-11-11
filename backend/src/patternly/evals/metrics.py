@@ -9,21 +9,13 @@ import statistics
 from collections import Counter, defaultdict
 
 from ..content.loader import Content
-from ..content.validate import _mentions
+from ..tutor.leaks import names_pattern
 
 
 def hint_names_pattern(content: Content, scenario_id: str, hint: str, answer_text: str = "") -> bool:
-    """True if the hint names the pattern (or an alias) that the learner hadn't already written.
-
-    Echoing the learner's own words ("is that what your heap puts on top?") gives nothing away.
-    """
+    """True if the hint names the pattern (or an alias) that the learner hadn't already written."""
     scenario = content.scenarios[scenario_id]
-    pattern = content.patterns.get(scenario.pattern)
-    if pattern is None or not hint:
-        return False
-    return any(
-        _mentions(hint, phrase) and not _mentions(answer_text, phrase) for phrase in (pattern.name, *pattern.aliases)
-    )
+    return names_pattern(content.patterns.get(scenario.pattern), hint, answer_text) is not None
 
 
 def _rate(numer: int, denom: int) -> float | None:
