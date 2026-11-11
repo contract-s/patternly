@@ -369,6 +369,28 @@ def cmd_try(args: argparse.Namespace) -> int:
         print(f"Hint (level {r.hint_level}): {r.hint}\n")
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    import anthropic
+    import uvicorn
+
+    from .service.app import create_app, tutor_grader
+    from .service.auth import jwt_secret
+
+    content = _checked_content(args)
+    if content is None:
+        return 1
+    _load_env()
+    try:
+        secret = jwt_secret()
+    except RuntimeError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    judge = None if args.judge == "none" else args.judge
+    grader = tutor_grader(anthropic.Anthropic(), _checker(content, judge), model=args.model, effort=args.effort)
+    uvicorn.run(create_app(content, grader, secret=secret), host=args.host, port=args.port)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="patternly", description="Patternly content tools")
     parser.add_argument("--content", help="path to the content directory (default: nearest content/)")
@@ -456,6 +478,14 @@ def build_parser() -> argparse.ArgumentParser:
     tr.add_argument("--effort", default=DEFAULT_EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
     tr.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
     tr.set_defaults(func=cmd_try)
+
+    sv = sub.add_parser("serve", help="run the API (needs the database, JWT_SECRET, and an API key)")
+    sv.add_argument("--host", default="127.0.0.1")
+    sv.add_argument("--port", type=int, default=8000)
+    sv.add_argument("--model", default=DEFAULT_MODEL)
+    sv.add_argument("--effort", default=DEFAULT_EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
+    sv.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
+    sv.set_defaults(func=cmd_serve)
     return parser
 
 
