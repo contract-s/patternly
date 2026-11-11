@@ -214,6 +214,161 @@ def cmd_retrieval_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def _load_env() -> None:
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
+
+def _note_search(conn):
+    """search_notes backed by hybrid retrieval: the top note sections for a query."""
+    from .retrieval.models import LocalEmbedder
+    from .retrieval.search import Retriever
+
+    retriever = Retriever(conn, LocalEmbedder())
+
+    def search(query: str) -> list[str]:
+        from .tutor.agent import NOTES_PER_SEARCH
+
+        return [c.text for c in retriever.search(query, "hybrid", limit=NOTES_PER_SEARCH)]
+
+    return search
+
+
+def _checker(content, judge_model: str | None):
+    from .tutor.leaks import LeakChecker, ModelJudge
+
+    judge = None
+    if judge_model:
+        import anthropic
+
+        judge = ModelJudge(anthropic.Anthropic(), judge_model)
+    return LeakChecker(content.patterns, judge)
+
+
+def cmd_leak_check(args: argparse.Namespace) -> int:
+    from .evals import leaks
+
+    content = _checked_content(args)
+    if content is None:
+        return 1
+    if args.judge:
+        _load_env()
+    planted_path = Path(args.planted) if args.planted else content.root.parent / "evals" / "planted-leaks.yaml"
+    planted = leaks.load_planted(planted_path)
+    records = leaks.run_leak_eval(content, planted, _checker(content, args.judge))
+    summary = leaks.summarize(records, judged=bool(args.judge))
+    out_root = Path(args.out) if args.out else content.root.parent / "evals" / "runs"
+    out_dir = leaks.save(records, summary, out_root, args.label, args.judge)
+    print((out_dir / "summary.md").read_text())
+    missed = [r for r in records if r["source"] == "planted" and not r["caught"]]
+    wrong = [r for r in records if r["source"] != "planted" and r["caught"]]
+    for r in missed:
+        print(f"MISSED  {r['scenario']} L{r['level']} {r['expected']}: {r['hint']}")
+    for r in wrong:
+        print(f"FLAGGED {r['scenario']} L{r['level']} ({r['source']}): {r['detail']}")
+    print(f"Saved to {out_dir}")
+    return 0
+
+
+def cmd_tutor_eval(args: argparse.Namespace) -> int:
+    import contextlib
+
+    import anthropic
+
+    from .evals.agent import AgentEvalConfig, run_agent_eval
+
+    if args.split == "sealed" and not args.final:
+        print("The sealed set is only for final reported numbers. Re-run with --final.", file=sys.stderr)
+        return 1
+    content = _checked_content(args)
+    if content is None:
+        return 1
+    _load_env()
+    judge = None if args.judge == "none" else args.judge
+    config = AgentEvalConfig(
+        label=args.label,
+        split=args.split,
+        model=args.model,
+        effort=args.effort,
+        judge_model=judge,
+        notes=args.notes,
+        attempts=args.attempts,
+        concurrency=args.concurrency,
+        limit=args.limit,
+    )
+    out_root = Path(args.out) if args.out else content.root.parent / "evals" / "runs"
+
+    def progress(done: int, total: int) -> None:
+        print(f"\r{done}/{total} answers", end="", file=sys.stderr, flush=True)
+
+    with contextlib.ExitStack() as stack:
+        search = None
+        if args.notes:
+            from .retrieval.store import connect
+
+            search = _note_search(stack.enter_context(connect()))
+        out_dir, summary = run_agent_eval(
+            anthropic.Anthropic(), content, config, _checker(content, judge), out_root, search, progress
+        )
+    print(file=sys.stderr)
+    print((out_dir / "summary.md").read_text())
+    print(f"Saved to {out_dir}")
+    return 0 if summary["errors"] == 0 else 1
+
+
+def cmd_try(args: argparse.Namespace) -> int:
+    """Try a lesson in the terminal: explain, get graded, get stronger hints, until you pass."""
+    import anthropic
+
+    from .tutor.agent import run_attempt
+    from .tutor.history import InMemoryHistory
+
+    content = _checked_content(args)
+    if content is None:
+        return 1
+    scenario = content.scenarios.get(args.scenario)
+    if scenario is None:
+        print(f"No scenario '{args.scenario}'. Scenarios: {', '.join(sorted(content.scenarios))}", file=sys.stderr)
+        return 1
+    _load_env()
+    client, history = anthropic.Anthropic(), InMemoryHistory()
+    checker = _checker(content, None if args.judge == "none" else args.judge)
+    print(f"{scenario.title}\n\n{scenario.prompt.strip()}\n")
+    while True:
+        print("Explain your solution (end with an empty line; Ctrl-D to quit):")
+        lines = []
+        try:
+            while (line := input()) != "":
+                lines.append(line)
+        except EOFError:
+            return 0
+        if not lines:
+            continue
+        r = run_attempt(
+            client,
+            scenario,
+            "\n".join(lines),
+            learner_id="you",
+            history=history,
+            checker=checker,
+            model=args.model,
+            effort=args.effort,
+        )
+        if r.error:
+            print(f"Error: {r.error}", file=sys.stderr)
+            continue
+        hit = sum(c.hit for c in r.items)
+        print(f"\n{hit} of {len(r.items)} key ideas. (${r.cost_usd:.3f}, {r.latency_s:.1f} s)")
+        if r.verdict == "pass":
+            pattern = content.patterns[scenario.pattern]
+            print(f"\nYou've got it. The pattern is {pattern.name}.")
+            if pattern.summary:
+                print(pattern.summary)
+            return 0
+        print(f"Hint (level {r.hint_level}): {r.hint}\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="patternly", description="Patternly content tools")
     parser.add_argument("--content", help="path to the content directory (default: nearest content/)")
@@ -269,6 +424,38 @@ def build_parser() -> argparse.ArgumentParser:
     re_.add_argument("--label", default="retrieval")
     re_.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
     re_.set_defaults(func=cmd_retrieval_eval)
+
+    from .tutor.leaks import DEFAULT_JUDGE_MODEL
+
+    lc = sub.add_parser("leak-check", help="check that the leak checker catches planted leaky hints")
+    lc.add_argument(
+        "--judge", metavar="MODEL", help=f"also check revealed steps with this model (e.g. {DEFAULT_JUDGE_MODEL})"
+    )
+    lc.add_argument("--planted", help="planted leaks file (default: evals/planted-leaks.yaml)")
+    lc.add_argument("--label", default="leaks")
+    lc.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
+    lc.set_defaults(func=cmd_leak_check)
+
+    te = sub.add_parser("tutor-eval", help="run the tool-using tutor over labeled answers, resubmitting failures")
+    te.add_argument("--split", choices=["dev", "sealed"], default="dev")
+    te.add_argument("--final", action="store_true", help="required to run on the sealed split")
+    te.add_argument("--model", default=DEFAULT_MODEL)
+    te.add_argument("--effort", default=DEFAULT_EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
+    te.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
+    te.add_argument("--notes", action="store_true", help="back search_notes with retrieval (needs the database)")
+    te.add_argument("--attempts", type=int, default=3, help="submissions per answer while it fails (default 3)")
+    te.add_argument("--concurrency", type=int, default=8)
+    te.add_argument("--limit", type=int, help="only the first N answers (for a quick check)")
+    te.add_argument("--label", default="tutor-loop")
+    te.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
+    te.set_defaults(func=cmd_tutor_eval)
+
+    tr = sub.add_parser("try", help="try a lesson in the terminal with the tutor")
+    tr.add_argument("scenario", help="scenario id")
+    tr.add_argument("--model", default=DEFAULT_MODEL)
+    tr.add_argument("--effort", default=DEFAULT_EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
+    tr.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
+    tr.set_defaults(func=cmd_try)
     return parser
 
 

@@ -1,0 +1,28 @@
+{
+  "judge": true,
+  "planted_caught": 40,
+  "planted_total": 40,
+  "by_kind": {
+    "pattern-name": {
+      "caught": 10,
+      "total": 10
+    },
+    "copied-solution": {
+      "caught": 10,
+      "total": 10
+    },
+    "revealed-steps": {
+      "caught": 20,
+      "total": 20
+    }
+  },
+  "clean_flagged": 18,
+  "clean_total": 90,
+  "clean_flags_by_kind": {
+    "revealed-steps": 17,
+    "copied-solution": 1
+  },
+  "tricky_flagged": 1,
+  "tricky_total": 4,
+  "cost_usd": 0.0446102
+}
