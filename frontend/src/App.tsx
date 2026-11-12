@@ -3,11 +3,19 @@ import { ApiError, api, getToken, setToken } from './api/client'
 import type { Streak } from './api/types'
 import AuthForm from './components/AuthForm'
 import LessonPage from './components/LessonPage'
+import ReviewQueue from './components/ReviewQueue'
 import StreakBadge from './components/StreakBadge'
 
 export default function App() {
   const [token, setTokenState] = useState(getToken)
   const [streak, setStreak] = useState<Streak | null>(null)
+  // Bumped after each graded try, so the review queue reloads when a lesson finishes.
+  const [graded, setGraded] = useState(0)
+
+  const onStreak = useCallback((s: Streak) => {
+    setStreak(s)
+    setGraded((n) => n + 1)
+  }, [])
 
   function signIn(t: string) {
     setToken(t)
@@ -45,7 +53,16 @@ export default function App() {
           </nav>
         )}
       </header>
-      <main>{token ? <LessonPage onStreak={setStreak} onUnauthorized={signOut} /> : <AuthForm onAuthed={signIn} />}</main>
+      <main>
+        {token ? (
+          <>
+            <LessonPage onStreak={onStreak} onUnauthorized={signOut} />
+            <ReviewQueue version={graded} />
+          </>
+        ) : (
+          <AuthForm onAuthed={signIn} />
+        )}
+      </main>
     </div>
   )
 }
