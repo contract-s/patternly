@@ -1,4 +1,4 @@
-"""`patternly` command line: validate, stats, seal, eval, index, search, retrieval-eval."""
+"""`patternly` command line: validate, stats, seal, eval, index, search, retrieval-eval, serve, remind."""
 
 from __future__ import annotations
 
@@ -397,6 +397,60 @@ def cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_remind(args: argparse.Namespace) -> int:
+    import asyncio
+    import os
+    from datetime import UTC, datetime
+
+    import psycopg
+
+    from .retrieval.store import database_url
+    from .service.auth import jwt_secret
+    from .service.db import apply_schema
+    from .service.reminders import send_due, ses_sender
+
+    _load_env()
+    try:
+        secret = jwt_secret()
+    except RuntimeError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    app_url = os.environ.get("APP_URL", "")
+    from_address = os.environ.get("REMINDER_FROM", "")
+    if args.print:
+
+        def sender(to: str, subject: str, body: str) -> None:
+            print(f"--- learner email, subject: {subject}\n{body}")
+
+    elif not args.dry_run:
+        if not app_url or not from_address:
+            print("Set APP_URL and REMINDER_FROM (or use --dry-run or --print).", file=sys.stderr)
+            return 1
+        sender = ses_sender(from_address)
+    else:
+        sender = None
+
+    async def run():
+        async with await psycopg.AsyncConnection.connect(database_url(), autocommit=True) as conn:
+            await apply_schema(conn)
+            return await send_due(
+                conn,
+                datetime.now(UTC),
+                sender,
+                app_url=app_url or "http://localhost:8080",
+                secret=secret,
+                dry_run=args.dry_run,
+            )
+
+    results = asyncio.run(run())
+    # Learner ids only: addresses and message bodies stay out of logs.
+    for r in results:
+        print(f"learner {r.learner.id} {r.local_date}: {r.status}" + (f" ({r.error})" if r.error else ""))
+    failed = sum(r.status == "failed" for r in results)
+    print(f"{len(results)} due, {len(results) - failed} ok, {failed} failed")
+    return 1 if failed else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="patternly", description="Patternly content tools")
     parser.add_argument("--content", help="path to the content directory (default: nearest content/)")
@@ -493,6 +547,11 @@ def build_parser() -> argparse.ArgumentParser:
     sv.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
     sv.add_argument("--offline", action="store_true", help="grade by word matching instead of the tutor (free)")
     sv.set_defaults(func=cmd_serve)
+
+    rm = sub.add_parser("remind", help="email learners whose lesson isn't done (run hourly)")
+    rm.add_argument("--dry-run", action="store_true", help="list who is due without sending or recording anything")
+    rm.add_argument("--print", action="store_true", help="print the emails instead of sending them through SES")
+    rm.set_defaults(func=cmd_remind)
     return parser
 
 
