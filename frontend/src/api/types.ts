@@ -21,6 +21,7 @@ export interface Me {
 
 export interface Attempt {
   attempt: number
+  answer: string
   verdict: 'pass' | 'fail'
   ideas_hit: string[]
   ideas_total: number

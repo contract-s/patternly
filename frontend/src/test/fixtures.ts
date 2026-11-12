@@ -11,6 +11,7 @@ export const reveal: Reveal = {
 export function attempt(over: Partial<Attempt> = {}): Attempt {
   return {
     attempt: 1,
+    answer: 'I would keep a count.',
     verdict: 'fail',
     ideas_hit: ['Keeps a running count.'],
     ideas_total: 4,
