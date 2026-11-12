@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, api } from '../api/client'
 import type { Lesson, Streak } from '../api/types'
 import AnswerBox from './AnswerBox'
@@ -17,10 +17,16 @@ export default function LessonPage({ onStreak, onUnauthorized }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function fail(err: unknown) {
-    if (err instanceof ApiError && err.status === 401) onUnauthorized()
+  // Kept in a ref so `fail` stays stable even if the parent passes a new function each render.
+  const unauthorized = useRef(onUnauthorized)
+  useEffect(() => {
+    unauthorized.current = onUnauthorized
+  }, [onUnauthorized])
+
+  const fail = useCallback((err: unknown) => {
+    if (err instanceof ApiError && err.status === 401) unauthorized.current()
     else setError(err instanceof ApiError ? err.message : 'Something went wrong')
-  }
+  }, [])
 
   useEffect(() => {
     let live = true
@@ -31,8 +37,7 @@ export default function LessonPage({ onStreak, onUnauthorized }: Props) {
     return () => {
       live = false
     }
-    // Load once on mount.
-  }, [])
+  }, [fail])
 
   async function submit(answer: string) {
     setBusy(true)
