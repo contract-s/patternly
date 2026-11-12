@@ -12,11 +12,17 @@ export interface Streak {
   done_today: boolean
 }
 
+export interface Reminders {
+  enabled: boolean
+  hour: number // local hour the email goes out, 0-23
+}
+
 export interface Me {
   id: number
   email: string
   timezone: string
   streak: Streak
+  reminders: Reminders
 }
 
 export interface Attempt {
