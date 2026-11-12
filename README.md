@@ -129,17 +129,22 @@ is one run, so the accuracy difference from the baseline is within run-to-run no
 
 ## Running the API
 
-```
-docker compose up -d                 # Postgres + pgvector on port 5433
-cp backend/.env.example backend/.env # add ANTHROPIC_API_KEY and JWT_SECRET
-cd backend && uv run patternly serve # http://127.0.0.1:8000/docs
-```
-
-Add `--offline` to grade by simple word matching instead of the tutor, which makes no API calls (for trying the
-app, not for real grading). The web app runs alongside it:
+The whole app in Docker (Postgres, the API, and the web app behind nginx):
 
 ```
-cd frontend && npm install && npm run dev   # http://localhost:5173, proxies /api to the API
+cp backend/.env.example backend/.env           # add ANTHROPIC_API_KEY and JWT_SECRET
+docker compose --profile app up -d --build     # http://localhost:8080
+```
+
+Put `API_FLAGS=--offline` in `backend/.env` to grade by simple word matching instead of the tutor, which makes no
+API calls (for trying the app, not for real grading).
+
+For development, run the database alone and the API and web app locally:
+
+```
+docker compose up -d                           # Postgres + pgvector on port 5433
+cd backend && uv run patternly serve           # http://127.0.0.1:8000/docs (add --offline to skip the tutor)
+cd frontend && npm install && npm run dev      # http://localhost:5173, proxies /api to the API
 ```
 
 | Endpoint | What it does |
