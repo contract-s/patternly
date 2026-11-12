@@ -135,6 +135,13 @@ cp backend/.env.example backend/.env # add ANTHROPIC_API_KEY and JWT_SECRET
 cd backend && uv run patternly serve # http://127.0.0.1:8000/docs
 ```
 
+Add `--offline` to grade by simple word matching instead of the tutor, which makes no API calls (for trying the
+app, not for real grading). The web app runs alongside it:
+
+```
+cd frontend && npm install && npm run dev   # http://localhost:5173, proxies /api to the API
+```
+
 | Endpoint | What it does |
 |---|---|
 | `POST /auth/register`, `POST /auth/login` | Email, password, and IANA time zone; returns a bearer token (JWT, 7 days) |

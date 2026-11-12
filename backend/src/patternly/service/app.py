@@ -68,6 +68,7 @@ class MeOut(BaseModel):
 
 class AttemptOut(BaseModel):
     attempt: int
+    answer: str  # the learner's own explanation
     verdict: str
     ideas_hit: list[str]  # the rubric ideas the learner stated (missed ones stay hidden)
     ideas_total: int
@@ -269,6 +270,7 @@ def _attempt(scenario, a: dict) -> AttemptOut:
     hit = [item.idea for item in scenario.rubric if a["items"].get(item.id)]
     return AttemptOut(
         attempt=a["attempt"],
+        answer=a["answer"],
         verdict=a["verdict"],
         ideas_hit=hit,
         ideas_total=len(scenario.rubric),

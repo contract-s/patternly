@@ -79,6 +79,7 @@ def test_full_lesson_streak_and_review_queue(api):
     assert (lesson["kind"], lesson["scenario"]["id"]) == ("new", "s-b1")
     for n in range(1, MAX_ATTEMPTS + 1):
         out = submit(client, "a wrong idea")
+        assert out["attempt"]["answer"] == "a wrong idea"
         assert out["attempt"]["hint_level"] == min(n, 3) and out["attempt"]["hint"] == f"Hint {min(n, 3)}."
         assert out["attempt"]["ideas_hit"] == ["First idea."] and out["attempt"]["ideas_total"] == 2
         if n < MAX_ATTEMPTS:
