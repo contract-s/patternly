@@ -1,0 +1,41 @@
+import { type FormEvent, useState } from 'react'
+
+interface Props {
+  attemptsLeft: number
+  busy: boolean
+  onSubmit: (answer: string) => void
+  /** Earlier answer to start from, so a hint means revising rather than retyping. */
+  initial?: string
+}
+
+export default function AnswerBox({ attemptsLeft, busy, onSubmit, initial = '' }: Props) {
+  const [answer, setAnswer] = useState(initial)
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    if (answer.trim()) onSubmit(answer.trim())
+  }
+
+  return (
+    <form className="card answer" onSubmit={submit}>
+      <label htmlFor="answer">Your explanation</label>
+      <textarea
+        id="answer"
+        rows={8}
+        maxLength={5000}
+        value={answer}
+        onChange={(e) => setAnswer(e.target.value)}
+        placeholder="What would you keep track of, and how would you move through the input?"
+        disabled={busy}
+      />
+      <div className="row">
+        <span className="muted">
+          {attemptsLeft} {attemptsLeft === 1 ? 'try' : 'tries'} left
+        </span>
+        <button type="submit" disabled={busy || !answer.trim()}>
+          {busy ? 'Grading…' : 'Check my explanation'}
+        </button>
+      </div>
+    </form>
+  )
+}
