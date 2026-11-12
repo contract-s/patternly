@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { getToken, setToken } from './api/client'
 import AuthForm from './components/AuthForm'
+import LessonPage from './components/LessonPage'
 
 export default function App() {
   const [token, setTokenState] = useState(getToken)
@@ -25,7 +26,7 @@ export default function App() {
           </button>
         )}
       </header>
-      <main>{token ? <p>Signed in.</p> : <AuthForm onAuthed={signIn} />}</main>
+      <main>{token ? <LessonPage onStreak={() => {}} onUnauthorized={signOut} /> : <AuthForm onAuthed={signIn} />}</main>
     </div>
   )
 }
