@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { ApiError, api, getToken, setToken } from './api/client'
 import type { Me, Streak } from './api/types'
 import AuthForm from './components/AuthForm'
+import Intro from './components/Intro'
 import LessonPage from './components/LessonPage'
+import Logo from './components/Logo'
+import ProgressCard from './components/ProgressCard'
 import ReminderSettings from './components/ReminderSettings'
 import ReviewQueue from './components/ReviewQueue'
 import StreakBadge from './components/StreakBadge'
@@ -48,29 +51,39 @@ export default function App() {
   }, [token, signOut])
 
   return (
-    <div className="app">
+    <>
       <header className="topbar">
-        <h1>Patternly</h1>
-        {token && (
-          <nav>
-            {streak && <StreakBadge streak={streak} />}
-            <button type="button" className="link" onClick={signOut}>
-              Log out
-            </button>
-          </nav>
-        )}
+        <div className="topbar-inner">
+          <h1>
+            <Logo />
+          </h1>
+          {token && (
+            <nav>
+              {streak && <StreakBadge streak={streak} />}
+              <button type="button" className="link" onClick={signOut}>
+                Log out
+              </button>
+            </nav>
+          )}
+        </div>
       </header>
-      <main>
-        {token ? (
-          <>
+      {token ? (
+        <main className="app layout">
+          <div className="main-col">
             <LessonPage onStreak={onStreak} onUnauthorized={signOut} />
+          </div>
+          <div className="side-col">
+            {streak && <ProgressCard streak={streak} />}
             <ReviewQueue version={graded} />
             {me && <ReminderSettings key={me.id} initial={me.reminders} timezone={me.timezone} />}
-          </>
-        ) : (
+          </div>
+        </main>
+      ) : (
+        <main className="app landing">
+          <Intro />
           <AuthForm onAuthed={signIn} />
-        )}
-      </main>
-    </div>
+        </main>
+      )}
+    </>
   )
 }

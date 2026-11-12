@@ -2,13 +2,15 @@ import { type FormEvent, useState } from 'react'
 
 interface Props {
   attemptsLeft: number
+  /** Tries per lesson, for the dots; the API allows 4. */
+  totalAttempts?: number
   busy: boolean
   onSubmit: (answer: string) => void
   /** Earlier answer to start from, so a hint means revising rather than retyping. */
   initial?: string
 }
 
-export default function AnswerBox({ attemptsLeft, busy, onSubmit, initial = '' }: Props) {
+export default function AnswerBox({ attemptsLeft, totalAttempts = 4, busy, onSubmit, initial = '' }: Props) {
   const [answer, setAnswer] = useState(initial)
 
   function submit(e: FormEvent) {
@@ -29,7 +31,12 @@ export default function AnswerBox({ attemptsLeft, busy, onSubmit, initial = '' }
         disabled={busy}
       />
       <div className="row">
-        <span className="muted">
+        <span className="tries muted">
+          <span className="tries-dots" aria-hidden="true">
+            {Array.from({ length: Math.max(totalAttempts, attemptsLeft) }, (_, i) => (
+              <span key={i} className={i < attemptsLeft ? 'left' : 'used'} />
+            ))}
+          </span>
           {attemptsLeft} {attemptsLeft === 1 ? 'try' : 'tries'} left
         </span>
         <button type="submit" disabled={busy || !answer.trim()}>
