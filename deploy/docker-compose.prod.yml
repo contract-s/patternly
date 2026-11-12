@@ -1,0 +1,17 @@
+# Production overrides for the AWS instance, layered on the root docker-compose.yml:
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml --profile app up -d --build
+# POSTGRES_PASSWORD comes from the .env file next to docker-compose.yml (written by setup-instance.sh).
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    ports: !reset []  # the database stays inside the compose network
+    restart: unless-stopped
+
+  api:
+    environment:
+      DATABASE_URL: postgresql://patternly:${POSTGRES_PASSWORD}@db:5432/patternly
+
+  web:
+    ports: !override
+      - "80:80"  # CloudFront connects here; the security group allows only CloudFront
