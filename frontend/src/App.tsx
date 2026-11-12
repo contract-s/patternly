@@ -3,6 +3,7 @@ import { ApiError, api, getToken, setToken } from './api/client'
 import type { Me, Streak } from './api/types'
 import AuthForm from './components/AuthForm'
 import LessonPage from './components/LessonPage'
+import Logo from './components/Logo'
 import ReminderSettings from './components/ReminderSettings'
 import ReviewQueue from './components/ReviewQueue'
 import StreakBadge from './components/StreakBadge'
@@ -50,7 +51,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>Patternly</h1>
+        <h1>
+          <Logo />
+        </h1>
         {token && (
           <nav>
             {streak && <StreakBadge streak={streak} />}
@@ -68,7 +71,16 @@ export default function App() {
             {me && <ReminderSettings key={me.id} initial={me.reminders} timezone={me.timezone} />}
           </>
         ) : (
-          <AuthForm onAuthed={signIn} />
+          <>
+            <section className="intro">
+              <h2>One algorithm pattern a day, learned by explaining it.</h2>
+              <p className="muted">
+                Read a short scenario, explain how you'd solve it in plain words, and get feedback from a tutor
+                that won't give the answer away. About ten minutes a day.
+              </p>
+            </section>
+            <AuthForm onAuthed={signIn} />
+          </>
         )}
       </main>
     </div>
