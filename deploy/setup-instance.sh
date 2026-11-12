@@ -4,7 +4,8 @@
 #
 # Usage (as root): setup-instance.sh <aws-region> <ssm-parameter-prefix>
 # The tutor's API key is read from the SecureString parameter <prefix>/anthropic-api-key. If it is
-# missing, the API runs with --offline (word matching, no API calls).
+# missing, the API runs with --offline (word matching, no API calls). Also installs an hourly systemd
+# timer that sends reminder emails (deploy/remind.sh).
 set -euo pipefail
 
 REGION=${1:?region}
@@ -51,6 +52,7 @@ if [ ! -f .env ]; then
   log "generating the database password"
   echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)" >.env
 fi
+grep -q '^AWS_REGION=' .env || echo "AWS_REGION=$REGION" >>.env
 if [ ! -f deploy/jwt-secret ]; then
   openssl rand -hex 32 >deploy/jwt-secret
 fi
@@ -73,4 +75,10 @@ umask 022
 log "building and starting the app"
 docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml --profile app up -d --build --remove-orphans
 docker image prune -f >/dev/null
+
+log "installing the hourly reminder timer"
+printf 'REGION=%s\nPREFIX=%s\n' "$REGION" "$PREFIX" >/etc/patternly-remind.env
+cp deploy/systemd/patternly-remind.service deploy/systemd/patternly-remind.timer /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now patternly-remind.timer
 log "done"

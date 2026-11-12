@@ -1,6 +1,6 @@
 # Production overrides for the AWS instance, layered on the root docker-compose.yml:
 #   docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml --profile app up -d --build
-# POSTGRES_PASSWORD comes from the .env file next to docker-compose.yml (written by setup-instance.sh).
+# POSTGRES_PASSWORD and AWS_REGION come from the .env file next to docker-compose.yml (written by setup-instance.sh).
 services:
   db:
     environment:
@@ -11,6 +11,7 @@ services:
   api:
     environment:
       DATABASE_URL: postgresql://patternly:${POSTGRES_PASSWORD}@db:5432/patternly
+      AWS_REGION: ${AWS_REGION:-us-east-2}  # boto3 sends reminders through SES with the instance role
 
   web:
     ports: !override
