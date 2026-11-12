@@ -385,8 +385,14 @@ def cmd_serve(args: argparse.Namespace) -> int:
     except RuntimeError as e:
         print(str(e), file=sys.stderr)
         return 1
-    judge = None if args.judge == "none" else args.judge
-    grader = tutor_grader(anthropic.Anthropic(), _checker(content, judge), model=args.model, effort=args.effort)
+    if args.offline:
+        from .service.offline import offline_grader
+
+        grader = offline_grader
+        print("Offline grader: word matching, no API calls. Not the real tutor.", file=sys.stderr)
+    else:
+        judge = None if args.judge == "none" else args.judge
+        grader = tutor_grader(anthropic.Anthropic(), _checker(content, judge), model=args.model, effort=args.effort)
     uvicorn.run(create_app(content, grader, secret=secret), host=args.host, port=args.port)
     return 0
 
@@ -485,6 +491,7 @@ def build_parser() -> argparse.ArgumentParser:
     sv.add_argument("--model", default=DEFAULT_MODEL)
     sv.add_argument("--effort", default=DEFAULT_EFFORT, choices=["low", "medium", "high", "xhigh", "max"])
     sv.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
+    sv.add_argument("--offline", action="store_true", help="grade by word matching instead of the tutor (free)")
     sv.set_defaults(func=cmd_serve)
     return parser
 
