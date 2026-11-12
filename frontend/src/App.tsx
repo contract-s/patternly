@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ApiError, api, getToken, setToken } from './api/client'
-import type { Streak } from './api/types'
+import type { Me, Streak } from './api/types'
 import AuthForm from './components/AuthForm'
 import LessonPage from './components/LessonPage'
+import ReminderSettings from './components/ReminderSettings'
 import ReviewQueue from './components/ReviewQueue'
 import StreakBadge from './components/StreakBadge'
 
 export default function App() {
   const [token, setTokenState] = useState(getToken)
   const [streak, setStreak] = useState<Streak | null>(null)
+  const [me, setMe] = useState<Me | null>(null)
   // Bumped after each graded try, so the review queue reloads when a lesson finishes.
   const [graded, setGraded] = useState(0)
 
@@ -26,13 +28,18 @@ export default function App() {
     setToken(null)
     setTokenState(null)
     setStreak(null)
+    setMe(null)
   }, [])
 
   useEffect(() => {
     if (!token) return
     let live = true
     api.me().then(
-      (me) => live && setStreak(me.streak),
+      (m) => {
+        if (!live) return
+        setMe(m)
+        setStreak(m.streak)
+      },
       (err) => live && err instanceof ApiError && err.status === 401 && signOut(),
     )
     return () => {
@@ -58,6 +65,7 @@ export default function App() {
           <>
             <LessonPage onStreak={onStreak} onUnauthorized={signOut} />
             <ReviewQueue version={graded} />
+            {me && <ReminderSettings key={me.id} initial={me.reminders} timezone={me.timezone} />}
           </>
         ) : (
           <AuthForm onAuthed={signIn} />

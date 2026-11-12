@@ -26,10 +26,12 @@ test('signed in: shows today\'s lesson', async () => {
     email: 'me@x.test',
     timezone: 'UTC',
     streak: { current: 3, longest: 3, freezes: 0, done_today: false },
+    reminders: { enabled: true, hour: 19 },
   })
   render(<App />)
   expect(await screen.findByRole('heading', { name: 'Longest calm stretch' })).toBeInTheDocument()
   expect(await screen.findByText(/3 days/)).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Reminder emails' })).toBeInTheDocument()
 })
 
 test('log out clears the token', async () => {
