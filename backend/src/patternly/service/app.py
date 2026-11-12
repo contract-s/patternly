@@ -1,26 +1,32 @@
 """The HTTP API.
 
 POST /auth/register, POST /auth/login     -> bearer token
-GET  /me                                  -> learner and streak
+GET  /me                                  -> learner, streak, and reminder settings
+PUT  /me/reminders                        -> turn reminders on or off and pick their local hour
 GET  /lessons/today                       -> today's lesson (picked on first request of the day)
 POST /lessons/today/attempts              -> grade an explanation; returns the critique, hint, or reveal
 GET  /reviews                             -> patterns due for review, and upcoming ones
+GET/POST /reminders/unsubscribe           -> the link in reminder emails
 """
 
+import html
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from typing import Annotated
+from urllib.parse import parse_qs
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
 
 from ..content.loader import Content
 from ..learning.streaks import Streak
 from . import lessons as L
+from . import reminders as R
 from .auth import hash_password, make_token, read_token, verify_password
 from .db import apply_schema, make_pool
 
@@ -59,11 +65,22 @@ class StreakOut(BaseModel):
     done_today: bool
 
 
+class RemindersOut(BaseModel):
+    enabled: bool
+    hour: int  # local hour, 0-23
+
+
+class RemindersIn(BaseModel):
+    enabled: bool
+    hour: int = Field(ge=0, le=23)
+
+
 class MeOut(BaseModel):
     id: int
     email: str
     timezone: str
     streak: StreakOut
+    reminders: RemindersOut
 
 
 class AttemptOut(BaseModel):
@@ -199,7 +216,19 @@ def create_app(
     @app.get("/me")
     async def me(learner: Me, conn: Conn) -> MeOut:
         streak = await L.get_streak(conn, learner, clock())
-        return MeOut(id=learner.id, email=learner.email, timezone=learner.timezone, streak=_streak(streak))
+        enabled, hour = await R.get_settings(conn, learner.id)
+        return MeOut(
+            id=learner.id,
+            email=learner.email,
+            timezone=learner.timezone,
+            streak=_streak(streak),
+            reminders=RemindersOut(enabled=enabled, hour=hour),
+        )
+
+    @app.put("/me/reminders")
+    async def set_reminders(body: RemindersIn, learner: Me, conn: Conn) -> RemindersOut:
+        await R.set_settings(conn, learner.id, body.enabled, body.hour)
+        return RemindersOut(enabled=body.enabled, hour=body.hour)
 
     async def lesson_out(conn, learner: L.Learner, row: dict) -> LessonOut:
         scenario = content.scenarios[row["scenario_id"]]
@@ -259,7 +288,37 @@ def create_app(
         ]
         return ReviewsOut(due=[r for r in out if r.due <= today], upcoming=[r for r in out if r.due > today])
 
+    # The link in reminder emails. GET only shows a button, so mail scanners that prefetch links
+    # don't unsubscribe anyone; the button POSTs back to the same URL.
+    @app.get("/reminders/unsubscribe", response_class=HTMLResponse)
+    async def unsubscribe_page(token: str) -> HTMLResponse:
+        if R.read_unsubscribe_token(token, secret) is None:
+            return _page("That link isn't valid.", status=400)
+        return _page(
+            "Stop the daily reminder emails?",
+            f'<form method="post"><input type="hidden" name="token" value="{html.escape(token)}">'
+            '<button type="submit">Turn off reminders</button></form>',
+        )
+
+    @app.post("/reminders/unsubscribe", response_class=HTMLResponse)
+    async def unsubscribe(request: Request, conn: Conn) -> HTMLResponse:
+        token = parse_qs((await request.body()).decode()).get("token", [""])[0]
+        learner_id = R.read_unsubscribe_token(token, secret)
+        if learner_id is None or not await R.unsubscribe(conn, learner_id):
+            return _page("That link isn't valid.", status=400)
+        return _page("Reminders are off. You won't get any more emails from Patternly.")
+
     return app
+
+
+def _page(message: str, extra: str = "", status: int = 200) -> HTMLResponse:
+    return HTMLResponse(
+        '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
+        "<title>Patternly</title>"
+        '<body style="font-family:system-ui;max-width:32rem;margin:4rem auto;padding:0 1rem">'
+        f"<h1>Patternly</h1><p>{html.escape(message)}</p>{extra}</body>",
+        status_code=status,
+    )
 
 
 def _streak(s: Streak) -> StreakOut:
