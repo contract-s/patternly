@@ -1,8 +1,295 @@
 :root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --text: #1d1d1b;
+  --muted: #6b6a64;
+  --border: #e3e1da;
+  --accent: #2f5bea;
+  --accent-text: #ffffff;
+  --pass: #1f7a4d;
+  --pass-bg: #e8f5ee;
+  --fail: #9a5b00;
+  --fail-bg: #fdf3e2;
+  --error: #b42318;
+  --radius: 12px;
+
+  color-scheme: light;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  line-height: 1.5;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151514;
+    --surface: #1f1f1d;
+    --text: #ecebe6;
+    --muted: #a3a29b;
+    --border: #34332f;
+    --accent: #7c9bff;
+    --accent-text: #0d0d0c;
+    --pass: #6fd3a0;
+    --pass-bg: #16291f;
+    --fail: #f0b45a;
+    --fail-bg: #2c2414;
+    --error: #ff8a80;
+
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--bg);
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.topbar nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.card h2 {
+  margin: 4px 0 8px;
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.prompt {
+  white-space: pre-wrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  margin-right: 6px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--text);
+}
+
+.badge.new {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.badge.review {
+  background: var(--fail-bg);
+  color: var(--fail);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+input,
+textarea {
+  font: inherit;
+  font-weight: 400;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+textarea {
+  resize: vertical;
+  margin-top: 6px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.link {
+  background: none;
+  color: var(--accent);
+  padding: 0;
+  font-weight: 500;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.auth {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 400px;
+  margin: 24px auto;
+}
+
+.error {
+  color: var(--error);
+  margin: 0;
+}
+
+.critique.pass {
+  background: var(--pass-bg);
+  border-color: transparent;
+}
+
+.critique.fail {
+  background: var(--fail-bg);
+  border-color: transparent;
+}
+
+.critique p {
+  margin: 0 0 8px;
+}
+
+.ideas {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.hint {
+  border-left: 3px solid var(--fail);
+  padding-left: 12px;
+}
+
+.reveal h2 {
+  font-size: 1.6rem;
+}
+
+.cost {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  margin: 12px 0;
+}
+
+.cost dt {
+  color: var(--muted);
+}
+
+.cost dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.streak {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.streak.pending {
+  color: var(--muted);
+}
+
+.reviews {
+  margin-top: 16px;
+}
+
+.reviews h4 {
+  margin: 12px 0 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reviews ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reviews li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.reviews .name {
+  font-weight: 600;
 }
