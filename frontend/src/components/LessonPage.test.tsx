@@ -43,10 +43,14 @@ test('loads, fails once with a hint, then passes and reveals', async () => {
   expect(onStreak).toHaveBeenLastCalledWith(streak)
 })
 
-test('a finished lesson shows the reveal straight away', async () => {
-  vi.spyOn(api, 'today').mockResolvedValue(lesson({ status: 'revealed', attempts_left: 0, reveal }))
+test('a finished lesson shows the reveal above the earlier tries', async () => {
+  vi.spyOn(api, 'today').mockResolvedValue(
+    lesson({ status: 'revealed', attempts_left: 0, reveal, attempts: [attempt(), attempt({ attempt: 2 })] }),
+  )
   render(<LessonPage onStreak={vi.fn()} onUnauthorized={vi.fn()} />)
-  expect(await screen.findByText('Out of tries. The pattern is')).toBeInTheDocument()
+  const revealPanel = await screen.findByRole('region', { name: 'Pattern reveal' })
+  const firstTry = screen.getByRole('region', { name: 'Feedback on try 2' })
+  expect(revealPanel.compareDocumentPosition(firstTry) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
 })
 
 test('errors: 401 signs out, others are shown', async () => {

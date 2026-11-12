@@ -66,6 +66,10 @@ export default function LessonPage({ onStreak, onUnauthorized }: Props) {
   return (
     <div className="stack">
       <LessonCard lesson={lesson} />
+      {/* When the lesson is over, the reveal goes first so it isn't buried under the earlier tries. */}
+      {lesson.status !== 'open' && lesson.reveal && (
+        <RevealPanel reveal={lesson.reveal} status={lesson.status} nextReview={lesson.next_review} />
+      )}
       {[...lesson.attempts].reverse().map((a) => (
         <Critique key={a.attempt} attempt={a} />
       ))}
@@ -74,7 +78,7 @@ export default function LessonPage({ onStreak, onUnauthorized }: Props) {
           {error}
         </p>
       )}
-      {lesson.status === 'open' ? (
+      {lesson.status === 'open' && (
         <AnswerBox
           key={lesson.attempts.length}
           attemptsLeft={lesson.attempts_left}
@@ -82,8 +86,6 @@ export default function LessonPage({ onStreak, onUnauthorized }: Props) {
           onSubmit={submit}
           initial={last?.answer}
         />
-      ) : (
-        lesson.reveal && <RevealPanel reveal={lesson.reveal} status={lesson.status} nextReview={lesson.next_review} />
       )}
     </div>
   )
