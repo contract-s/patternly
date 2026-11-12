@@ -1,0 +1,10 @@
+[Unit]
+Description=Send Patternly reminder emails every hour
+
+[Timer]
+# A couple of minutes past each hour; learners pick a whole hour for their reminder.
+OnCalendar=*-*-* *:02:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

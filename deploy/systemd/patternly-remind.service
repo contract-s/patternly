@@ -1,0 +1,10 @@
+[Unit]
+Description=Patternly reminder emails
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# setup-instance.sh writes the region and parameter prefix here.
+EnvironmentFile=/etc/patternly-remind.env
+ExecStart=/opt/patternly/deploy/remind.sh ${REGION} ${PREFIX}
