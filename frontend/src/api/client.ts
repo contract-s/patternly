@@ -1,4 +1,4 @@
-import type { Lesson, Me, Reviews, SubmitResult, Token } from './types'
+import type { Lesson, Me, Reminders, Reviews, SubmitResult, Token } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const TOKEN_KEY = 'patternly.token'
@@ -63,4 +63,5 @@ export const api = {
   today: () => request<Lesson>('GET', '/lessons/today'),
   submit: (answer: string) => request<SubmitResult>('POST', '/lessons/today/attempts', { answer }),
   reviews: () => request<Reviews>('GET', '/reviews'),
+  setReminders: (r: Reminders) => request<Reminders>('PUT', '/me/reminders', r),
 }

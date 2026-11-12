@@ -293,3 +293,40 @@ button.link {
 .reviews .name {
   font-weight: 600;
 }
+
+.reminders {
+  margin-top: 16px;
+}
+
+.reminders label {
+  display: block;
+  margin-top: 8px;
+}
+
+.reminders .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reminders select {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.reminders select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.reminders select:disabled {
+  opacity: 0.5;
+}
+
+.reminders .row {
+  justify-content: flex-start;
+}

@@ -152,10 +152,12 @@ cd frontend && npm install && npm run dev      # http://localhost:5173, proxies 
 | Endpoint | What it does |
 |---|---|
 | `POST /auth/register`, `POST /auth/login` | Email, password, and IANA time zone; returns a bearer token (JWT, 7 days) |
-| `GET /me` | The learner and their streak |
+| `GET /me` | The learner, their streak, and their reminder settings |
+| `PUT /me/reminders` | Turns reminder emails on or off and sets the local hour they go out |
 | `GET /lessons/today` | Today's lesson, picked on the first request of the learner's local day |
 | `POST /lessons/today/attempts` | Grades an explanation: ideas hit (missed ones stay hidden), a hint, and the reveal when the lesson ends |
 | `GET /reviews` | Patterns due for review and upcoming ones |
+| `GET`/`POST /reminders/unsubscribe` | The link in reminder emails: shows a button, then turns reminders off |
 
 How a day works:
 
@@ -169,6 +171,18 @@ How a day works:
   returns the next day.
 - **Streak.** Days in a row with a finished lesson, in the learner's time zone. Every 7 in a row earns a streak
   freeze (at most 2), used up automatically to cover a missed day.
+- **Reminder.** If today's lesson isn't finished by the learner's chosen hour (7 pm local unless they change
+  it), `patternly remind` sends one email through Amazon SES with a link to the app and the current streak.
+  It runs hourly on the server; each reminder is claimed in the database first, so nobody gets two in a day,
+  and a learner whose hour passed while the job was down still gets one later that day. Every email has an
+  unsubscribe link.
+
+### Why learners pick their reminder time
+
+I first planned one fixed reminder time for everyone. Working out that schedule against my own days, I
+realized the email would often arrive while I was in class or asleep, and by the time I checked my inbox it
+would be buried under everything else that came in. A reminder only helps if it shows up when you can act on
+it, so I made the hour a setting: each learner picks it in the web app, in their own time zone.
 
 Tests (`uv run pytest`) run the whole flow through the API with a fake tutor against a scratch database:
 a full lesson, the streak growing across days, and a missed pattern coming back in the review queue.

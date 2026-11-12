@@ -21,6 +21,12 @@ Parameters:
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: The project's default VPC (the instance goes in one of its default subnets).
+  SenderAddress:
+    Type: String
+    AllowedPattern: "^[^@\\s]+@[^@\\s]+$"
+    Description: >-
+      The From address for reminder emails. SES emails it a verification link that must be clicked
+      before reminders can go out.
   CloudFrontPrefixList:
     Type: String
     Default: pl-b6a144df
@@ -78,6 +84,17 @@ Resources:
               - Effect: Allow
                 Action: ssm:GetParameter
                 Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPrefix}/*
+        - PolicyName: send-reminders
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # identity/* because in the SES sandbox each verified recipient identity is checked too.
+              - Effect: Allow
+                Action: ses:SendEmail
+                Resource: !Sub arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*
+                Condition:
+                  StringEquals:
+                    ses:FromAddress: !Ref SenderAddress
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -88,13 +105,15 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     Metadata:
       com.aws.cloudformation.Context:
-        why: Holds the settings AWS::EC2::Instance can't set directly (IMDSv2).
+        why: >-
+          Holds the settings AWS::EC2::Instance can't set directly (IMDSv2). Hop limit 2 lets the API
+          container reach the instance role's credentials (for SES).
     Properties:
       LaunchTemplateData:
         MetadataOptions:
           HttpTokens: required
           HttpEndpoint: enabled
-          HttpPutResponseHopLimit: 1
+          HttpPutResponseHopLimit: 2
 
   Instance:
     Type: AWS::EC2::Instance
@@ -132,6 +151,31 @@ Resources:
           apt-get update -q && apt-get install -y -q git
           git clone https://github.com/contract-s/patternly.git /opt/patternly
           /opt/patternly/deploy/setup-instance.sh ${AWS::Region} ${ParameterPrefix}
+
+  SenderIdentity:
+    Type: AWS::SES::EmailIdentity
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: The verified From address for reminders. Testers' addresses are verified separately while in the sandbox.
+    Properties:
+      EmailIdentity: !Ref SenderAddress
+
+  ReminderFromParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub ${ParameterPrefix}/reminder-from
+      Type: String
+      Value: !Ref SenderAddress
+
+  AppUrlParameter:
+    Type: AWS::SSM::Parameter
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: The link in reminder emails; read by deploy/remind.sh on each run.
+    Properties:
+      Name: !Sub ${ParameterPrefix}/app-url
+      Type: String
+      Value: !Sub https://${Distribution.DomainName}
 
   ElasticIp:
     Type: AWS::EC2::EIP

@@ -13,6 +13,8 @@ browser --HTTPS--> CloudFront --HTTP:80--> EC2 (nginx -> FastAPI -> Postgres)
 - **Secrets:** the database password and JWT secret are generated on the instance at first boot and never
   leave it. The tutor's API key is read from the SSM SecureString parameter `/patternly/anthropic-api-key`.
   Without it, the API runs with `--offline`.
+- **Reminders:** a systemd timer runs `patternly remind` in the API container every hour, which sends through
+  Amazon SES with the instance role (allowed to send only from the configured sender address).
 - **Data:** Postgres lives on the instance's encrypted root volume. Replacing or terminating the instance
   deletes learner data.
 
@@ -27,18 +29,35 @@ aws ssm put-parameter --region us-east-2 --name /patternly/anthropic-api-key --t
   --value "$(grep '^ANTHROPIC_API_KEY=' backend/.env | cut -d= -f2-)"
 ```
 
-Create the stack (the default VPC's ID goes in `VpcId`):
+Create the stack (the default VPC's ID goes in `VpcId`, and the reminder emails' From address in
+`SenderAddress`):
 
 ```
 aws cloudformation create-stack --region us-east-2 --stack-name patternly \
   --template-body file://deploy/patternly.yaml --capabilities CAPABILITY_IAM \
-  --parameters ParameterKey=VpcId,ParameterValue=<default-vpc-id>
+  --parameters ParameterKey=VpcId,ParameterValue=<default-vpc-id> \
+    ParameterKey=SenderAddress,ParameterValue=<you@example.com>
 aws cloudformation wait stack-create-complete --region us-east-2 --stack-name patternly
 aws cloudformation describe-stacks --region us-east-2 --stack-name patternly --query 'Stacks[0].Outputs'
 ```
 
 The stack finishes in about 5 minutes. The instance takes about 10 more to install Docker and build the
 images, and CloudFront returns 502 until it's done. The setup log is `/var/log/patternly-setup.log`.
+
+## Reminder emails
+
+SES emails the sender address a verification link when the stack is created; reminders can't go out until
+it's clicked. While the SES account is in the sandbox, it can only send to (1) addresses verified as their own
+identity, (2) the SES mailbox simulator, or (3) any address at a verified domain. For a handful of testers,
+verify each address; each tester gets an email from AWS and clicks the link once:
+
+```
+aws sesv2 create-email-identity --region us-east-2 --email-identity <tester@example.com>
+```
+
+Reminders go out at each learner's chosen hour (7 pm local by default, changed in the web app). To see what
+the timer did, from a Session Manager shell: `journalctl -u patternly-remind --since today`. A reminder that
+SES rejects (for example, an unverified address in the sandbox) is recorded as failed and not retried that day.
 
 ## Deploying new code
 
@@ -70,4 +89,6 @@ aws ssm delete-parameter --region us-east-2 --name /patternly/anthropic-api-key
 - CloudFront reaches the instance over plain HTTP. The security group only admits CloudFront, but traffic
   between CloudFront and the instance isn't encrypted.
 - One instance and no backups: a lost instance means lost accounts and history.
+- In the SES sandbox, only verified recipients get reminders, and mail from a personal address sent through SES
+  can land in spam (no DKIM for a domain you don't control).
 - The images build on the instance, so a deploy takes a few minutes and briefly uses most of its memory.
