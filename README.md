@@ -139,6 +139,8 @@ docker compose --profile app up -d --build     # http://localhost:8080
 Put `API_FLAGS=--offline` in `backend/.env` to grade by simple word matching instead of the tutor, which makes no
 API calls (for trying the app, not for real grading).
 
+To run it on AWS (one EC2 instance behind CloudFront), see [deploy/README.md](deploy/README.md).
+
 For development, run the database alone and the API and web app locally:
 
 ```
