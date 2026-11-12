@@ -48,3 +48,19 @@ CREATE TABLE IF NOT EXISTS pattern_progress (
     last_outcome text NOT NULL,
     PRIMARY KEY (learner_id, pattern_id)
 );
+
+-- Daily reminder emails. Learners can turn them off from the link in each email.
+ALTER TABLE learners ADD COLUMN IF NOT EXISTS reminders_enabled boolean NOT NULL DEFAULT true;
+-- The local hour (0-23) the reminder goes out; learners pick it in the web app.
+ALTER TABLE learners ADD COLUMN IF NOT EXISTS reminder_hour int NOT NULL DEFAULT 19
+    CHECK (reminder_hour BETWEEN 0 AND 23);
+
+-- One row per reminder: claimed before sending, so a learner gets at most one per local day.
+CREATE TABLE IF NOT EXISTS reminders (
+    learner_id bigint NOT NULL REFERENCES learners (id) ON DELETE CASCADE,
+    local_date date NOT NULL,
+    status     text NOT NULL DEFAULT 'sending' CHECK (status IN ('sending', 'sent', 'failed')),
+    error      text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (learner_id, local_date)
+);
