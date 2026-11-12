@@ -21,3 +21,6 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Generated on the AWS instance by deploy/setup-instance.sh
+deploy/jwt-secret

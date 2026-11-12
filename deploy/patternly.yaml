@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Patternly on one EC2 instance: Docker Compose (Postgres, FastAPI, nginx) on Ubuntu 24.04 behind a
+  CloudFront distribution for HTTPS. No SSH; shell access is through SSM Session Manager. The only
+  inbound traffic allowed is HTTP from CloudFront's origin-facing addresses.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+    Description: 2 GB (t3.small) is enough for the app; the setup script adds 2 GB of swap for builds.
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+  ParameterPrefix:
+    Type: String
+    Default: /patternly
+    AllowedPattern: "^/[a-zA-Z0-9_.-]+$"
+    Description: SSM Parameter Store path holding the SecureString anthropic-api-key.
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The project's default VPC (the instance goes in one of its default subnets).
+  CloudFrontPrefixList:
+    Type: String
+    Default: pl-b6a144df
+    Description: >-
+      Managed prefix list com.amazonaws.global.cloudfront.origin-facing in us-east-2
+      (aws ec2 describe-managed-prefix-lists to look it up in another Region).
+
+Resources:
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: The instance serves plain HTTP to CloudFront, which terminates HTTPS for viewers.
+        must: Never open ingress to 0.0.0.0/0 or add SSH; use Session Manager for shell access.
+    Properties:
+      GroupDescription: Patternly web, HTTP from CloudFront only
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourcePrefixListId: !Ref CloudFrontPrefixList
+          Description: CloudFront origin-facing
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS out (apt, GitHub, Docker Hub, Claude API, SSM)
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP out (Ubuntu apt mirrors)
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: Session Manager access plus reading the tutor API key; nothing else.
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: read-app-parameters
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ssm:GetParameter
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ParameterPrefix}/*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: Holds the settings AWS::EC2::Instance can't set directly (IMDSv2).
+    Properties:
+      LaunchTemplateData:
+        MetadataOptions:
+          HttpTokens: required
+          HttpEndpoint: enabled
+          HttpPutResponseHopLimit: 1
+
+  Instance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: >-
+          One instance runs the whole Docker Compose stack. User data runs deploy/setup-instance.sh from
+          the public repo; rerun it through Session Manager or Run Command to deploy new code.
+        must: >-
+          Postgres data lives on the root volume; replacing the instance (new AMI, user data change)
+          loses learner data.
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref ImageId
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: [!GetAtt WebSecurityGroup.GroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 30
+            Encrypted: true
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          exec > >(tee -a /var/log/patternly-setup.log) 2>&1
+          apt-get update -q && apt-get install -y -q git
+          git clone https://github.com/contract-s/patternly.git /opt/patternly
+          /opt/patternly/deploy/setup-instance.sh ${AWS::Region} ${ParameterPrefix}
+
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Instance
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: >-
+          HTTPS on the default *.cloudfront.net certificate without a domain. Everything is uncached
+          and forwarded with all viewer headers (Authorization for the JWT) except /assets/*, which
+          Vite fingerprints.
+        must: Origin read timeout must cover a graded attempt (10-20 s, longer with retries).
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub ${AWS::StackName}
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: instance
+            # The EIP's public DNS name; CloudFront origins must be names, not IP addresses.
+            DomainName: !Sub
+              - ec2-${Dashed}.${AWS::Region}.compute.amazonaws.com
+              - Dashed: !Join ["-", !Split [".", !Ref ElasticIp]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+              HTTPPort: 80
+              OriginReadTimeout: 60
+              OriginKeepaliveTimeout: 5
+        DefaultCacheBehavior:
+          TargetOriginId: instance
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # Managed-CachingDisabled
+          OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # Managed-AllViewerExceptHostHeader
+        CacheBehaviors:
+          - PathPattern: /assets/*
+            TargetOriginId: instance
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # Managed-CachingOptimized
+
+Outputs:
+  Url:
+    Description: The app
+    Value: !Sub https://${Distribution.DomainName}
+  InstanceId:
+    Description: For Session Manager and Run Command
+    Value: !Ref Instance
+  ElasticIp:
+    Value: !Ref ElasticIp
