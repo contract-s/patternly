@@ -38,8 +38,11 @@ if [ ! -f /swapfile ]; then
 fi
 
 if [ -d "$APP_DIR/.git" ]; then
-  log "pulling the latest code"
-  git -C "$APP_DIR" pull --ff-only
+  log "updating to the latest main"
+  # fetch + reset rather than pull: the server never has commits of its own, and this also follows a
+  # rewritten history. Untracked secrets (.env, backend/.env, deploy/jwt-secret) are gitignored and kept.
+  git -C "$APP_DIR" fetch --quiet origin main
+  git -C "$APP_DIR" reset --quiet --hard origin/main
 else
   log "cloning $REPO"
   git clone "$REPO" "$APP_DIR"
