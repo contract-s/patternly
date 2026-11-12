@@ -4,6 +4,7 @@ import type { Lesson, Streak } from '../api/types'
 import AnswerBox from './AnswerBox'
 import Critique from './Critique'
 import LessonCard from './LessonCard'
+import Steps from './Steps'
 import RevealPanel from './RevealPanel'
 
 interface Props {
@@ -65,6 +66,7 @@ export default function LessonPage({ onStreak, onUnauthorized }: Props) {
   const last = lesson.attempts.at(-1)
   return (
     <div className="stack">
+      <Steps status={lesson.status} />
       <LessonCard lesson={lesson} />
       {/* When the lesson is over, the reveal goes first so it isn't buried under the earlier tries. */}
       {lesson.status !== 'open' && lesson.reveal && (
