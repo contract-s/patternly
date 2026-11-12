@@ -1,0 +1,15 @@
+# Build context is the repo root (the backend image needs content/). Keep it small.
+.git
+.claude
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+evals/runs
+docs
+frontend

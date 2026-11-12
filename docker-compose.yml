@@ -1,4 +1,6 @@
-# Local services for development. Start with: docker compose up -d
+# Local services.
+#   docker compose up -d                          the database only (for development)
+#   docker compose --profile app up -d --build    the whole app at http://localhost:8080
 services:
   db:
     image: pgvector/pgvector:pg17
@@ -16,6 +18,38 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+
+  api:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - path: backend/.env  # ANTHROPIC_API_KEY, JWT_SECRET; set API_FLAGS=--offline to skip the tutor
+        required: false
+    environment:
+      DATABASE_URL: postgresql://patternly:patternly@db:5432/patternly
+    # $$ escapes compose interpolation, so API_FLAGS is read from the container's environment.
+    command: ["sh", "-c", "exec patternly serve --host 0.0.0.0 --port 8000 $${API_FLAGS:-}"]
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  web:
+    profiles: [app]
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   pgdata:
