@@ -16,6 +16,7 @@ from patternly.service.reminders import (
     due,
     read_unsubscribe_token,
     send_due,
+    ses_sender,
     unsubscribe_token,
 )
 
@@ -208,3 +209,14 @@ def test_learners_read_and_change_their_reminder_time(api):
 def test_unsubscribe_rejects_bad_tokens(api):
     assert api.get("/reminders/unsubscribe", params={"token": "nope"}).status_code == 400
     assert api.post("/reminders/unsubscribe", data={"token": make_token(1, SECRET)}).status_code == 400
+
+
+def test_ses_sender_uses_aws_region(monkeypatch):
+    import boto3
+
+    made = {}
+    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
+    monkeypatch.setenv("AWS_REGION", "us-east-2")
+    monkeypatch.setattr(boto3, "client", lambda service, region_name=None: made.update(region=region_name))
+    ses_sender("from@x.test")
+    assert made["region"] == "us-east-2"

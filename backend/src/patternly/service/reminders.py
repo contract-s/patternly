@@ -139,8 +139,12 @@ async def unsubscribe(conn: AsyncConnection, learner_id: int) -> bool:
 
 def ses_sender(from_address: str, region: str | None = None) -> Sender:
     """Sends through Amazon SES (v2 API) with the instance role's credentials."""
+    import os
+
     import boto3
 
+    # botocore reads AWS_DEFAULT_REGION but not AWS_REGION, which is what the deploy sets.
+    region = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
     client = boto3.client("sesv2", region_name=region)
 
     def send(to: str, subject: str, text: str) -> None:
