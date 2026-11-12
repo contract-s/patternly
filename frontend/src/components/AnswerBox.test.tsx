@@ -21,3 +21,9 @@ test('starts from the previous answer and locks while grading', () => {
   expect(screen.getByRole('button', { name: 'Grading…' })).toBeDisabled()
   expect(screen.getByText('1 try left')).toBeInTheDocument()
 })
+
+test('shows a dot per try, filled for the ones left', () => {
+  const { container } = render(<AnswerBox attemptsLeft={3} busy={false} onSubmit={() => {}} />)
+  expect(container.querySelectorAll('.tries-dots .left')).toHaveLength(3)
+  expect(container.querySelectorAll('.tries-dots .used')).toHaveLength(1)
+})
