@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from datetime import UTC, date, datetime
 from urllib.parse import parse_qs, urlparse
 
@@ -30,12 +31,14 @@ EVENING_NY = datetime(2026, 11, 13, 0, 30, tzinfo=UTC)
 class Outbox:
     def __init__(self, fail_for: set[str] = frozenset()) -> None:
         self.sent: list[tuple[str, str, str]] = []
+        self.html: list[str] = []
         self.fail_for = fail_for
 
-    def __call__(self, to: str, subject: str, body: str) -> None:
+    def __call__(self, to: str, subject: str, body: str, html: str) -> None:
         if to in self.fail_for:
             raise RuntimeError("MessageRejected: Email address is not verified.")
         self.sent.append((to, subject, body))
+        self.html.append(html)
 
 
 def with_conn(url, fn):
@@ -139,6 +142,21 @@ def test_email_links_to_the_app_and_a_working_unsubscribe(clean_db):
     assert read_unsubscribe_token(token, SECRET) == learner
 
 
+def test_html_email_has_the_logo_button_and_unsubscribe(clean_db):
+    learner = add_learner(clean_db, "ny@x.test", "America/New_York")
+    finish_lesson(clean_db, learner, date(2026, 11, 11))
+    outbox = Outbox()
+    send(clean_db, outbox)
+    html = outbox.html[0]
+    assert '<img src="https://app.test/email-logo.png"' in html
+    assert '<a href="https://app.test"' in html
+    assert "Start today's lesson" in html
+    assert "1-day streak" in html
+    link = re.search(r'href="(https://app\.test/api/reminders/unsubscribe\?token=[^"]+)"', html).group(1)
+    token = parse_qs(urlparse(link).query)["token"][0]
+    assert read_unsubscribe_token(token, SECRET) == learner
+
+
 def test_failed_sends_are_recorded_and_not_retried(clean_db):
     add_learner(clean_db, "bad@x.test", "America/New_York")
     add_learner(clean_db, "good@x.test", "America/New_York")
@@ -232,6 +250,8 @@ def test_ses_sender_sends_as_patternly(monkeypatch):
             calls.append(kwargs)
 
     monkeypatch.setattr(boto3, "client", lambda service, region_name=None: Client())
-    ses_sender("reminders@x.test", region="us-east-2")("learner@x.test", "Subject", "Body")
+    ses_sender("reminders@x.test", region="us-east-2")("learner@x.test", "Subject", "Body", "<p>Body</p>")
     assert calls[0]["FromEmailAddress"] == "Patternly <reminders@x.test>"
     assert calls[0]["Destination"] == {"ToAddresses": ["learner@x.test"]}
+    body = calls[0]["Content"]["Simple"]["Body"]
+    assert body["Text"]["Data"] == "Body" and body["Html"]["Data"] == "<p>Body</p>"

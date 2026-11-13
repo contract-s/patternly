@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 import jwt
 from psycopg import AsyncConnection
 
+from . import email_template
 from .auth import ALGORITHM
 from .lessons import Learner, get_streak
 
@@ -23,8 +24,8 @@ DEFAULT_HOUR = 19  # matches the reminder_hour column default
 SUBJECT = "Your Patternly lesson for today"
 SENDER_NAME = "Patternly"  # shown in the inbox instead of the bare address
 
-# Sends one plain-text email: (to, subject, body). Raises on failure.
-Sender = Callable[[str, str, str], None]
+# Sends one email: (to, subject, plain text, html). Raises on failure.
+Sender = Callable[[str, str, str, str], None]
 
 
 @dataclass
@@ -73,15 +74,6 @@ async def due(conn: AsyncConnection, now: datetime) -> list[tuple[Learner, date]
     return out
 
 
-def body(app_url: str, unsubscribe_url: str, streak: int) -> str:
-    lines = ["Hi,", "", f"Today's Patternly lesson isn't done yet. It takes about 10 minutes: {app_url}", ""]
-    if streak > 0:
-        days = "day" if streak == 1 else "days"
-        lines += [f"You're on a {streak}-{days} streak. Finish today's lesson to keep it going.", ""]
-    lines += [f"Don't want these emails? Turn them off: {unsubscribe_url}"]
-    return "\n".join(lines) + "\n"
-
-
 async def send_due(
     conn: AsyncConnection,
     now: datetime,
@@ -106,7 +98,12 @@ async def send_due(
         streak = (await get_streak(conn, learner, now)).current
         unsubscribe_url = f"{app_url}/api/reminders/unsubscribe?token={unsubscribe_token(learner.id, secret)}"
         try:
-            sender(learner.email, SUBJECT, body(app_url, unsubscribe_url, streak))
+            sender(
+                learner.email,
+                SUBJECT,
+                email_template.text(app_url, unsubscribe_url, streak),
+                email_template.html(app_url, unsubscribe_url, streak),
+            )
         except Exception as e:  # noqa: BLE001 - one bad address shouldn't stop the others
             error = f"{type(e).__name__}: {e}"[:500]
             await conn.execute(
@@ -150,11 +147,19 @@ def ses_sender(from_address: str, region: str | None = None, name: str = SENDER_
     client = boto3.client("sesv2", region_name=region)
     sender = formataddr((name, from_address))
 
-    def send(to: str, subject: str, text: str) -> None:
+    def send(to: str, subject: str, text: str, html: str) -> None:
         client.send_email(
             FromEmailAddress=sender,
             Destination={"ToAddresses": [to]},
-            Content={"Simple": {"Subject": {"Data": subject}, "Body": {"Text": {"Data": text}}}},
+            Content={
+                "Simple": {
+                    "Subject": {"Data": subject, "Charset": "UTF-8"},
+                    "Body": {
+                        "Text": {"Data": text, "Charset": "UTF-8"},
+                        "Html": {"Data": html, "Charset": "UTF-8"},
+                    },
+                }
+            },
         )
 
     return send

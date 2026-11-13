@@ -419,7 +419,7 @@ def cmd_remind(args: argparse.Namespace) -> int:
     from_address = os.environ.get("REMINDER_FROM", "")
     if args.print:
 
-        def sender(to: str, subject: str, body: str) -> None:
+        def sender(to: str, subject: str, body: str, html: str) -> None:
             print(f"--- learner email, subject: {subject}\n{body}")
 
     elif not args.dry_run:
