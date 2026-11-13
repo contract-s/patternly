@@ -55,6 +55,10 @@ verify each address; each tester gets an email from AWS and clicks the link once
 aws sesv2 create-email-identity --region us-east-2 --email-identity <tester@example.com>
 ```
 
+To change the From address, update the stack with a new `SenderAddress` (keeping the other parameters) and
+click the verification link SES sends to it. Emails show the sender as "Patternly". The old address stays
+verified (the identity is retained), so it can still receive reminders.
+
 Reminders go out at each learner's chosen hour (7 pm local by default, changed in the web app). To see what
 the timer did, from a Session Manager shell: `journalctl -u patternly-remind --since today`. A reminder that
 SES rejects (for example, an unverified address in the sandbox) is recorded as failed and not retried that day.

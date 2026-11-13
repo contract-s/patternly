@@ -154,9 +154,16 @@ Resources:
 
   SenderIdentity:
     Type: AWS::SES::EmailIdentity
+    # Retain: when SenderAddress changes, the old address stays verified, so it can still receive reminders
+    # while SES is in the sandbox. Delete leftover identities by hand once they aren't needed.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Metadata:
       com.aws.cloudformation.Context:
-        why: The verified From address for reminders. Testers' addresses are verified separately while in the sandbox.
+        why: >-
+          The verified From address for reminders. Testers' addresses are verified separately while in the
+          sandbox.
+        must: Keep Retain, so changing SenderAddress doesn't unverify an address learners use.
     Properties:
       EmailIdentity: !Ref SenderAddress
 
