@@ -220,3 +220,18 @@ def test_ses_sender_uses_aws_region(monkeypatch):
     monkeypatch.setattr(boto3, "client", lambda service, region_name=None: made.update(region=region_name))
     ses_sender("from@x.test")
     assert made["region"] == "us-east-2"
+
+
+def test_ses_sender_sends_as_patternly(monkeypatch):
+    import boto3
+
+    calls = []
+
+    class Client:
+        def send_email(self, **kwargs):
+            calls.append(kwargs)
+
+    monkeypatch.setattr(boto3, "client", lambda service, region_name=None: Client())
+    ses_sender("reminders@x.test", region="us-east-2")("learner@x.test", "Subject", "Body")
+    assert calls[0]["FromEmailAddress"] == "Patternly <reminders@x.test>"
+    assert calls[0]["Destination"] == {"ToAddresses": ["learner@x.test"]}

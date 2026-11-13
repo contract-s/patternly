@@ -21,6 +21,7 @@ from .lessons import Learner, get_streak
 
 DEFAULT_HOUR = 19  # matches the reminder_hour column default
 SUBJECT = "Your Patternly lesson for today"
+SENDER_NAME = "Patternly"  # shown in the inbox instead of the bare address
 
 # Sends one plain-text email: (to, subject, body). Raises on failure.
 Sender = Callable[[str, str, str], None]
@@ -137,19 +138,21 @@ async def unsubscribe(conn: AsyncConnection, learner_id: int) -> bool:
     return await cur.fetchone() is not None
 
 
-def ses_sender(from_address: str, region: str | None = None) -> Sender:
-    """Sends through Amazon SES (v2 API) with the instance role's credentials."""
+def ses_sender(from_address: str, region: str | None = None, name: str = SENDER_NAME) -> Sender:
+    """Sends through Amazon SES (v2 API) with the instance role's credentials, as "Patternly <address>"."""
     import os
+    from email.utils import formataddr
 
     import boto3
 
     # botocore reads AWS_DEFAULT_REGION but not AWS_REGION, which is what the deploy sets.
     region = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
     client = boto3.client("sesv2", region_name=region)
+    sender = formataddr((name, from_address))
 
     def send(to: str, subject: str, text: str) -> None:
         client.send_email(
-            FromEmailAddress=from_address,
+            FromEmailAddress=sender,
             Destination={"ToAddresses": [to]},
             Content={"Simple": {"Subject": {"Data": subject}, "Body": {"Text": {"Data": text}}}},
         )
