@@ -177,6 +177,18 @@ How a day works:
   and a learner whose hour passed while the job was down still gets one later that day. Every email has an
   unsubscribe link.
 
+### Tracing
+
+The API is traced with OpenTelemetry. Each request is a span (FastAPI instrumentation). A graded attempt adds a
+`tutor.attempt` span under it, with one span per model call (model, input, output and cache tokens, cost) and
+one per tool call. Spans go to a JSON Lines file when `PATTERNLY_TRACE_FILE` is set (Docker Compose writes
+`/app/traces/spans.jsonl` on a volume), and to any OTLP collector when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+With neither, tracing is off.
+
+`patternly trace-report` reads the file and prints p50/p95 tutor and request latency, cost per attempt, and
+model turns per attempt (`--since 2026-11-14` for one stretch, such as the tester week). In Docker:
+`docker compose exec api patternly trace-report`.
+
 ### Why learners pick their reminder time
 
 I first planned one fixed reminder time for everyone. Working out that schedule against my own days, I

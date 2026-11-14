@@ -29,6 +29,9 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql://patternly:patternly@db:5432/patternly
+      PATTERNLY_TRACE_FILE: /app/traces/spans.jsonl  # read by: docker compose exec api patternly trace-report
+    volumes:
+      - traces:/app/traces
     # $$ escapes compose interpolation, so API_FLAGS is read from the container's environment.
     command: ["sh", "-c", "exec patternly serve --host 0.0.0.0 --port 8000 $${API_FLAGS:-}"]
     depends_on:
@@ -53,3 +56,4 @@ services:
 
 volumes:
   pgdata:
+  traces:

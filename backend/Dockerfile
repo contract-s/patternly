@@ -17,7 +17,8 @@ COPY backend/src ./src
 RUN uv sync --locked --no-dev
 COPY content /app/content
 
-RUN useradd --create-home --uid 1000 app
+RUN useradd --create-home --uid 1000 app \
+    && mkdir -p /app/traces && chown app /app/traces  # the traces volume takes this owner
 USER app
 EXPOSE 8000
 CMD ["patternly", "serve", "--host", "0.0.0.0", "--port", "8000"]

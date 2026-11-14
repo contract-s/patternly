@@ -19,9 +19,11 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel, ValidationError
 
 from ..content.models import Scenario
+from ..tracing import tracer
 from .baseline import DEFAULT_EFFORT, DEFAULT_MODEL, GradeError, ItemCall, Usage, check_grade
 from .history import AttemptRecord, History, next_hint_level
 from .leaks import LeakChecker, LeakReport
@@ -334,38 +336,83 @@ def run_attempt(
     # cache_control also caches the growing conversation between turns.
     system = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]
     started = time.perf_counter()
-    try:
-        while not session.done:
-            if result.turns >= max_turns:
-                raise RuntimeError(f"no accepted record_attempt after {max_turns} turns")
-            call_started = time.perf_counter()
-            response = client.messages.create(
-                model=model,
-                max_tokens=MAX_TOKENS,
-                system=system,
-                tools=TOOLS,
-                messages=messages,
-                output_config={"effort": effort},
-                cache_control={"type": "ephemeral"},
-            )
-            result.turns += 1
-            result.usages.append(Usage.from_response(response.usage, model, time.perf_counter() - call_started))
-            if response.stop_reason not in ("tool_use", "end_turn"):
-                raise RuntimeError(f"stopped with '{response.stop_reason}'")
-            # Sent back unchanged, thinking blocks included.
-            messages.append({"role": "assistant", "content": response.content})
-            tool_uses = [b for b in response.content if b.type == "tool_use"]
-            if not tool_uses:
-                messages.append(
-                    {"role": "user", "content": "The attempt isn't recorded yet. Call record_attempt to finish."}
-                )
-                continue
-            results = []
-            for block in tool_uses:
-                text, is_error = session.run(block.name, block.input)
-                results.append({"type": "tool_result", "tool_use_id": block.id, "content": text, "is_error": is_error})
-            messages.append({"role": "user", "content": results})
-    except Exception as e:  # API errors after the SDK's retries, or the loop giving up
-        result.error = f"{type(e).__name__}: {e}"
-    result.latency_s = time.perf_counter() - started
+    with tracer.start_as_current_span("tutor.attempt") as span:
+        span.set_attributes(
+            {
+                "patternly.scenario_id": scenario.id,
+                "patternly.attempt": result.attempt,
+                "gen_ai.request.model": model,
+                "patternly.effort": effort,
+            }
+        )
+        try:
+            while not session.done:
+                if result.turns >= max_turns:
+                    raise RuntimeError(f"no accepted record_attempt after {max_turns} turns")
+                response = _call_model(client, model, effort, system, messages, result)
+                if response.stop_reason not in ("tool_use", "end_turn"):
+                    raise RuntimeError(f"stopped with '{response.stop_reason}'")
+                # Sent back unchanged, thinking blocks included.
+                messages.append({"role": "assistant", "content": response.content})
+                tool_uses = [b for b in response.content if b.type == "tool_use"]
+                if not tool_uses:
+                    messages.append(
+                        {"role": "user", "content": "The attempt isn't recorded yet. Call record_attempt to finish."}
+                    )
+                    continue
+                results = []
+                for block in tool_uses:
+                    with tracer.start_as_current_span(f"tool {block.name}") as tool_span:
+                        text, is_error = session.run(block.name, block.input)
+                        tool_span.set_attributes({"gen_ai.tool.name": block.name, "patternly.tool.is_error": is_error})
+                    results.append(
+                        {"type": "tool_result", "tool_use_id": block.id, "content": text, "is_error": is_error}
+                    )
+                messages.append({"role": "user", "content": results})
+        except Exception as e:  # API errors after the SDK's retries, or the loop giving up
+            result.error = f"{type(e).__name__}: {e}"
+            span.record_exception(e)
+            span.set_status(Status(StatusCode.ERROR, result.error))
+        result.latency_s = time.perf_counter() - started
+        span.set_attributes(
+            {
+                "patternly.turns": result.turns,
+                "patternly.cost_usd": result.cost_usd,
+                "patternly.verdict": result.verdict or "",
+                "patternly.hint_level": result.hint_level or 0,
+                "patternly.hint_source": result.hint_source,
+            }
+        )
     return result
+
+
+def _call_model(client, model: str, effort: str, system: list[dict], messages: list[dict], result: AttemptResult):
+    """One Messages API call, traced with its token usage and cost, and added to the result's usages."""
+    with tracer.start_as_current_span(f"chat {model}") as span:
+        span.set_attributes(
+            {"gen_ai.operation.name": "chat", "gen_ai.provider.name": "anthropic", "gen_ai.request.model": model}
+        )
+        call_started = time.perf_counter()
+        response = client.messages.create(
+            model=model,
+            max_tokens=MAX_TOKENS,
+            system=system,
+            tools=TOOLS,
+            messages=messages,
+            output_config={"effort": effort},
+            cache_control={"type": "ephemeral"},
+        )
+        result.turns += 1
+        usage = Usage.from_response(response.usage, model, time.perf_counter() - call_started)
+        result.usages.append(usage)
+        span.set_attributes(
+            {
+                "gen_ai.response.finish_reasons": [str(response.stop_reason)],
+                "gen_ai.usage.input_tokens": usage.total_input_tokens,
+                "gen_ai.usage.output_tokens": usage.output_tokens,
+                "gen_ai.usage.cache_read.input_tokens": usage.cache_read_input_tokens,
+                "gen_ai.usage.cache_creation.input_tokens": usage.cache_creation_input_tokens,
+                "patternly.cost_usd": usage.cost_usd,
+            }
+        )
+        return response
