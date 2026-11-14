@@ -63,6 +63,18 @@ Reminders go out at each learner's chosen hour (7 pm local by default, changed i
 the timer did, from a Session Manager shell: `journalctl -u patternly-remind --since today`. A reminder that
 SES rejects (for example, an unverified address in the sandbox) is recorded as failed and not retried that day.
 
+## Traces
+
+The API writes OpenTelemetry spans to a Docker volume. For latency and cost per graded attempt, from a Session
+Manager shell:
+
+```
+cd /opt/patternly && sudo docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml \
+  exec api patternly trace-report --since 2026-11-14
+```
+
+The file gets one line per span and survives redeploys (it's on the `traces` volume).
+
 ## Deploying new code
 
 Push to `main`, then rerun the setup script, which pulls, rebuilds, and restarts:
