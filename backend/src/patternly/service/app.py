@@ -21,6 +21,7 @@ import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from pydantic import BaseModel, Field, field_validator
 
 from ..content.loader import Content
@@ -163,6 +164,8 @@ def create_app(
         await pool.close()
 
     app = FastAPI(title="Patternly", lifespan=lifespan)
+    # One span per request (a no-op unless tracing is set up); the grader's spans nest under it.
+    FastAPIInstrumentor.instrument_app(app, excluded_urls="health")
     bearer = HTTPBearer(auto_error=False)
 
     async def conn_dep():

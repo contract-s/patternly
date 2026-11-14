@@ -98,3 +98,32 @@ def test_full_lesson_streak_and_review_queue(api):
     submit(client, "right")
     assert client.get("/me").json()["streak"]["current"] == 3
     assert [r["pattern"] for r in client.get("/reviews").json()["due"]] == ["pat-a"]
+
+
+def test_requests_are_traced_and_grading_nests_under_them(clean_db, content_dir, spans):
+    from opentelemetry.trace import SpanKind
+
+    from patternly.tracing import tracer
+
+    def traced_grader(*args):
+        with tracer.start_as_current_span("tutor.attempt"):
+            return fake_grader(*args)
+
+    app = create_app(
+        two_pattern_content(content_dir), traced_grader, secret=SECRET, database_url=clean_db, clock=Clock()
+    )
+    with TestClient(app) as client:
+        assert client.get("/health").status_code == 200
+        token = client.post("/auth/register", json={"email": "t@x.test", "password": "longenough"}).json()
+        client.headers["Authorization"] = f"Bearer {token['access_token']}"
+        client.get("/lessons/today")
+        submit(client, "an answer")
+    finished = spans.get_finished_spans()
+    servers = {sp.name: sp for sp in finished if sp.kind == SpanKind.SERVER}
+    assert set(servers) == {"POST /auth/register", "GET /lessons/today", "POST /lessons/today/attempts"}
+    request = servers["POST /lessons/today/attempts"]
+    assert request.attributes["http.route"] == "/lessons/today/attempts"
+    (grading,) = [sp for sp in finished if sp.name == "tutor.attempt"]
+    assert grading.context.trace_id == request.context.trace_id
+    assert grading.parent.span_id == request.context.span_id
+    assert "longenough" not in str([dict(sp.attributes) for sp in finished])
