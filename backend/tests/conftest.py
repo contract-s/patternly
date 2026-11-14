@@ -171,3 +171,25 @@ def fake_grader(scenario, answer, history, learner_id):
         hint="" if ok else f"Hint {level}.",
         hint_source="" if ok else "tutor",
     )
+
+
+# One in-memory tracer provider for the whole run (OpenTelemetry allows setting it once per process).
+_SPANS = None
+
+
+@pytest.fixture
+def spans():
+    """Finished spans recorded during the test."""
+    global _SPANS
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+
+    if _SPANS is None:
+        _SPANS = InMemorySpanExporter()
+        provider = TracerProvider()
+        provider.add_span_processor(SimpleSpanProcessor(_SPANS))
+        trace.set_tracer_provider(provider)
+    _SPANS.clear()
+    return _SPANS
