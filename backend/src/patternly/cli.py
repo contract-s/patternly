@@ -370,6 +370,8 @@ def cmd_try(args: argparse.Namespace) -> int:
 
 
 def cmd_serve(args: argparse.Namespace) -> int:
+    import os
+
     import anthropic
     import uvicorn
 
@@ -385,6 +387,10 @@ def cmd_serve(args: argparse.Namespace) -> int:
     except RuntimeError as e:
         print(str(e), file=sys.stderr)
         return 1
+    from . import tracing
+
+    if tracing.setup("patternly-api"):
+        print(f"Tracing on: {os.environ.get(tracing.TRACE_FILE_ENV) or 'OTLP only'}", file=sys.stderr)
     if args.offline:
         from .service.offline import offline_grader
 
