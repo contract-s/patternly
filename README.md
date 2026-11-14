@@ -189,6 +189,17 @@ With neither, tracing is off.
 model turns per attempt (`--since 2026-11-14` for one stretch, such as the tester week). In Docker:
 `docker compose exec api patternly trace-report`.
 
+### Tester metrics
+
+`patternly tester-report --start 2026-11-16 --exclude you@example.com` reads the database and prints the tester
+trial's numbers, per tester (by learner id) and overall:
+
+- **Daily completion:** tester-days with a finished lesson, out of testers x days in the window (7 by default).
+  Only days that are over in every time zone count, so a day still in progress isn't counted as missed.
+- **Hints to solve:** hints shown before the pass (one per failed attempt), averaged over solved lessons.
+  Lessons revealed after the last failed attempt are counted separately.
+- **Longest streak:** each tester's longest run of finished days inside the window, then the median.
+
 ### Why learners pick their reminder time
 
 I first planned one fixed reminder time for everyone. Working out that schedule against my own days, I

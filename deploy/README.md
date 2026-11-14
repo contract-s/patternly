@@ -75,6 +75,13 @@ cd /opt/patternly && sudo docker compose -f docker-compose.yml -f deploy/docker-
 
 The file gets one line per span and survives redeploys (it's on the `traces` volume).
 
+The tester trial's completion, hints and streaks come from the database instead (leave your own account out):
+
+```
+cd /opt/patternly && sudo docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml \
+  exec api patternly tester-report --start 2026-11-16 --exclude you@example.com
+```
+
 ## Deploying new code
 
 Push to `main`, then rerun the setup script, which pulls, rebuilds, and restarts:

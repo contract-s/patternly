@@ -419,6 +419,28 @@ def cmd_trace_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_tester_report(args: argparse.Namespace) -> int:
+    import asyncio
+    from datetime import UTC, date, datetime, timedelta
+
+    import psycopg
+
+    from .evals.testers import format_report, last_complete_day, load, report
+    from .retrieval.store import database_url
+
+    _load_env()
+    start = date.fromisoformat(args.start)
+
+    async def run():
+        async with await psycopg.AsyncConnection.connect(database_url(), autocommit=True) as conn:
+            return await load(conn, start, args.days, exclude=args.exclude, only=args.learner)
+
+    ids, lessons = asyncio.run(run())
+    today = last_complete_day(datetime.now(UTC)) + timedelta(days=1)
+    print(format_report(report(ids, lessons, start, args.days, today)))
+    return 0
+
+
 def cmd_remind(args: argparse.Namespace) -> int:
     import asyncio
     import os
@@ -574,6 +596,13 @@ def build_parser() -> argparse.ArgumentParser:
     trp.add_argument("--file", help="JSON Lines trace file (default: $PATTERNLY_TRACE_FILE)")
     trp.add_argument("--since", help="only spans from this UTC date or time on, e.g. 2026-11-14")
     trp.set_defaults(func=cmd_trace_report)
+
+    tsr = sub.add_parser("tester-report", help="tester trial: daily completion, hints to solve, longest streak")
+    tsr.add_argument("--start", required=True, help="first local day of the trial, e.g. 2026-11-16")
+    tsr.add_argument("--days", type=int, default=7)
+    tsr.add_argument("--exclude", action="append", default=[], metavar="EMAIL", help="leave out a learner (repeat)")
+    tsr.add_argument("--learner", action="append", type=int, default=[], metavar="ID", help="only these learner ids")
+    tsr.set_defaults(func=cmd_tester_report)
 
     rm = sub.add_parser("remind", help="email learners whose lesson isn't done (run hourly)")
     rm.add_argument("--dry-run", action="store_true", help="list who is due without sending or recording anything")
