@@ -240,6 +240,46 @@ def test_gives_up_after_max_turns(content):
     assert r.verdict is None and "3 turns" in r.error
 
 
+def test_attempt_is_traced_with_model_and_tool_spans(content, spans):
+    client = ScriptedClient(
+        [
+            response(tool_use("get_rubric", {})),
+            response(record({"idea-a": True, "idea-b": True}, "pass"), stop_reason="end_turn"),
+        ]
+    )
+    r = run_attempt(
+        client, content.scenarios["s1"], "x", learner_id="u", history=InMemoryHistory(), checker=checker(content)
+    )
+    by_name = {}
+    for sp in spans.get_finished_spans():
+        by_name.setdefault(sp.name, []).append(sp)
+    (attempt,) = by_name["tutor.attempt"]
+    model_calls = [sp for name, group in by_name.items() if name.startswith("chat ") for sp in group]
+    assert len(model_calls) == 2 and set(by_name) >= {"tool get_rubric", "tool record_attempt"}
+    assert all(sp.parent.span_id == attempt.context.span_id for sp in model_calls)
+    assert attempt.attributes["patternly.scenario_id"] == "s1"
+    assert attempt.attributes["patternly.verdict"] == "pass" and attempt.attributes["patternly.turns"] == 2
+    assert attempt.attributes["patternly.cost_usd"] == r.cost_usd > 0
+    assert model_calls[0].attributes["gen_ai.usage.input_tokens"] == 100
+    assert model_calls[0].attributes["gen_ai.usage.output_tokens"] == 50
+    assert by_name["tool get_rubric"][0].attributes["patternly.tool.is_error"] is False
+
+
+def test_failed_attempt_span_has_error_status(content, spans):
+    client = ScriptedClient([response(tool_use("get_rubric", {}, i)) for i in range(2)])
+    run_attempt(
+        client,
+        content.scenarios["s1"],
+        "x",
+        learner_id="u",
+        history=InMemoryHistory(),
+        checker=checker(content),
+        max_turns=2,
+    )
+    (attempt,) = [sp for sp in spans.get_finished_spans() if sp.name == "tutor.attempt"]
+    assert attempt.status.status_code.name == "ERROR" and "2 turns" in attempt.status.description
+
+
 def test_search_notes_unavailable_without_retriever(content):
     s = content.scenarios["s1"]
     client = ScriptedClient(
