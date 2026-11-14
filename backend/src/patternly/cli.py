@@ -403,6 +403,22 @@ def cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_trace_report(args: argparse.Namespace) -> int:
+    import os
+    from datetime import UTC, datetime
+
+    from .evals.traces import format_report, load, report
+    from .tracing import TRACE_FILE_ENV
+
+    path = args.file or os.environ.get(TRACE_FILE_ENV)
+    if not path:
+        print(f"Pass --file or set {TRACE_FILE_ENV}.", file=sys.stderr)
+        return 1
+    since = datetime.fromisoformat(args.since).replace(tzinfo=UTC) if args.since else None
+    print(format_report(report(load(path, since))))
+    return 0
+
+
 def cmd_remind(args: argparse.Namespace) -> int:
     import asyncio
     import os
@@ -553,6 +569,11 @@ def build_parser() -> argparse.ArgumentParser:
     sv.add_argument("--judge", default=DEFAULT_JUDGE_MODEL, help="leak judge model, or 'none'")
     sv.add_argument("--offline", action="store_true", help="grade by word matching instead of the tutor (free)")
     sv.set_defaults(func=cmd_serve)
+
+    trp = sub.add_parser("trace-report", help="p50/p95 latency and cost per graded attempt, from the trace file")
+    trp.add_argument("--file", help="JSON Lines trace file (default: $PATTERNLY_TRACE_FILE)")
+    trp.add_argument("--since", help="only spans from this UTC date or time on, e.g. 2026-11-14")
+    trp.set_defaults(func=cmd_trace_report)
 
     rm = sub.add_parser("remind", help="email learners whose lesson isn't done (run hourly)")
     rm.add_argument("--dry-run", action="store_true", help="list who is due without sending or recording anything")

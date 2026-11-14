@@ -53,3 +53,14 @@ def test_load_filters_by_start(tmp_path):
     path = write(tmp_path / "s.jsonl", [span("a", 1), span("b", 1, start=later)])
     assert [s["name"] for s in load(path, since=datetime(2026, 11, 14, tzinfo=UTC))] == ["b"]
     assert len(load(path)) == 2
+
+
+def test_trace_report_command(tmp_path, capsys, monkeypatch):
+    from patternly.cli import main
+
+    monkeypatch.delenv("PATTERNLY_TRACE_FILE", raising=False)
+    assert main(["trace-report"]) == 1
+    path = write(tmp_path / "s.jsonl", [span("tutor.attempt", 9000, **{"patternly.cost_usd": 0.02})])
+    assert main(["trace-report", "--file", str(path), "--since", "2026-11-13"]) == 0
+    out = capsys.readouterr().out
+    assert "Graded attempts: 1 (0 errors)" in out and "p95 9.00" in out
