@@ -165,7 +165,8 @@ def create_app(
 
     app = FastAPI(title="Patternly", lifespan=lifespan)
     # One span per request (a no-op unless tracing is set up); the grader's spans nest under it.
-    FastAPIInstrumentor.instrument_app(app, excluded_urls="health")
+    # The ASGI send/receive child spans are left out: they only time writing the response.
+    FastAPIInstrumentor.instrument_app(app, excluded_urls="health", exclude_spans=["send", "receive"])
     bearer = HTTPBearer(auto_error=False)
 
     async def conn_dep():

@@ -126,4 +126,5 @@ def test_requests_are_traced_and_grading_nests_under_them(clean_db, content_dir,
     (grading,) = [sp for sp in finished if sp.name == "tutor.attempt"]
     assert grading.context.trace_id == request.context.trace_id
     assert grading.parent.span_id == request.context.span_id
+    assert not [sp.name for sp in finished if sp.name.endswith((" http send", " http receive"))]
     assert "longenough" not in str([dict(sp.attributes) for sp in finished])
