@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from patternly.evals.retrieval import make_query, summarize
+from patternly.evals.retrieval import gate_failures, make_query, run_retrieval_eval, summarize
 from patternly.retrieval.search import Retriever, rrf, top_patterns
 from patternly.retrieval.store import Chunk
 
@@ -75,3 +75,26 @@ def test_summary_hit_rates():
     assert s["hit_at_1"] == 0.25 and s["hit_at_3"] == 0.5
     assert s["mrr"] == pytest.approx((1 + 1 / 3 + 1 / 4 + 0) / 4)
     assert s["hit_at_3_by_kind"] == {"correct": 1.0, "vague": 0.0}
+
+
+def test_eval_runs_only_the_chosen_methods_and_forms():
+    from types import SimpleNamespace as NS
+
+    la = NS(
+        key="s1/a",
+        scenario=NS(prompt="p", pattern="both"),
+        answer=NS(text="t", kind=NS(value="correct")),
+    )
+    content = NS(dev_answers=lambda: [la], patterns={"both": 1, "v1": 1, "k1": 1, "z": 1})
+    result = run_retrieval_eval(make_retriever(), content, methods=["hybrid"], forms=["answer"])
+    assert list(result["summary"]) == ["answer | hybrid"]
+    assert result["summary"]["answer | hybrid"]["hit_at_3"] == 1.0
+
+
+def test_gate_failures():
+    summary = {
+        "answer | hybrid": {"hit_at_3": 0.825},
+        "answer | vector": {"hit_at_3": 0.8},
+    }
+    assert gate_failures(summary, 0.8) == []
+    assert gate_failures(summary, 0.825) == ["answer | vector: Hit@3 80.0% is below 82.5%"]

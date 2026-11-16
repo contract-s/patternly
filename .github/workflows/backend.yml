@@ -1,0 +1,36 @@
+# Lint, tests, and content validation for the Python package.
+name: backend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: patternly
+          POSTGRES_PASSWORD: patternly
+          POSTGRES_DB: patternly
+        ports: ["5433:5432"]  # the default DATABASE_URL in the package
+        options: >-
+          --health-cmd "pg_isready -U patternly -d patternly" --health-interval 2s --health-timeout 3s
+          --health-retries 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run patternly validate
+      - run: uv run pytest -q

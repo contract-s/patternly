@@ -27,11 +27,13 @@ def make_query(form: str, prompt: str, answer: str) -> str:
     raise ValueError(form)
 
 
-def run_retrieval_eval(retriever: Retriever, content: Content, methods: list[str] = METHODS) -> dict:
+def run_retrieval_eval(
+    retriever: Retriever, content: Content, methods: list[str] = METHODS, forms: list[str] = QUERY_FORMS
+) -> dict:
     answers = content.dev_answers()
     records = []
     for la in answers:
-        for form in QUERY_FORMS:
+        for form in forms:
             query = make_query(form, la.scenario.prompt, la.answer.text)
             for method in methods:
                 start = time.perf_counter()
@@ -53,6 +55,15 @@ def run_retrieval_eval(retriever: Retriever, content: Content, methods: list[str
                     }
                 )
     return {"answers": len(answers), "records": records, "summary": summarize(records)}
+
+
+def gate_failures(summary: dict, min_hit_at_3: float) -> list[str]:
+    """Every (query form, method) whose Hit@3 is below the threshold."""
+    return [
+        f"{key}: Hit@3 {s['hit_at_3']:.1%} is below {min_hit_at_3:.1%}"
+        for key, s in summary.items()
+        if s["hit_at_3"] < min_hit_at_3 - 1e-9
+    ]
 
 
 def summarize(records: list[dict]) -> dict:

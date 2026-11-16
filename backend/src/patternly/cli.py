@@ -174,11 +174,11 @@ def cmd_index(args: argparse.Namespace) -> int:
     return 0
 
 
-def _retriever(conn):
+def _retriever(conn, rerank: bool = True):
     from .retrieval.models import LocalEmbedder, LocalReranker
     from .retrieval.search import Retriever
 
-    return Retriever(conn, LocalEmbedder(), LocalReranker())
+    return Retriever(conn, LocalEmbedder(), LocalReranker() if rerank else None)
 
 
 def cmd_search(args: argparse.Namespace) -> int:
@@ -206,12 +206,20 @@ def cmd_retrieval_eval(args: argparse.Namespace) -> int:
         "started_at": retrieval.now(),
     }
     with connect() as conn:
-        result = retrieval.run_retrieval_eval(_retriever(conn), content)
+        methods = args.methods or retrieval.METHODS
+        # The reranker model is only downloaded and loaded when a method uses it.
+        retriever = _retriever(conn, rerank="hybrid-rerank" in methods)
+        result = retrieval.run_retrieval_eval(retriever, content, methods, args.forms or retrieval.QUERY_FORMS)
     out_root = Path(args.out) if args.out else content.root.parent / "evals" / "runs"
     out_dir = retrieval.save(result, config, out_root)
     print((out_dir / "summary.md").read_text())
     print(f"Saved to {out_dir}")
-    return 0
+    if args.min_hit3 is None:
+        return 0
+    failures = retrieval.gate_failures(result["summary"], args.min_hit3)
+    for f in failures:
+        print(f"GATE FAILED: {f}", file=sys.stderr)
+    return 1 if failures else 0
 
 
 def _load_env() -> None:
@@ -268,7 +276,14 @@ def cmd_leak_check(args: argparse.Namespace) -> int:
     for r in wrong:
         print(f"FLAGGED {r['scenario']} L{r['level']} ({r['source']}): {r['detail']}")
     print(f"Saved to {out_dir}")
-    return 0
+    failures = []
+    if args.max_missed is not None and len(missed) > args.max_missed:
+        failures.append(f"{len(missed)} planted leaks missed (allowed: {args.max_missed})")
+    if args.max_flagged is not None and len(wrong) > args.max_flagged:
+        failures.append(f"{len(wrong)} fine hints flagged (allowed: {args.max_flagged})")
+    for f in failures:
+        print(f"GATE FAILED: {f}", file=sys.stderr)
+    return 1 if failures else 0
 
 
 def cmd_tutor_eval(args: argparse.Namespace) -> int:
@@ -549,6 +564,9 @@ def build_parser() -> argparse.ArgumentParser:
     re_ = sub.add_parser("retrieval-eval", help="measure note retrieval hit rate on development answers")
     re_.add_argument("--label", default="retrieval")
     re_.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
+    re_.add_argument("--methods", nargs="+", help="search methods to run (default: all)")
+    re_.add_argument("--forms", nargs="+", help="query forms to run: answer, scenario+answer (default: both)")
+    re_.add_argument("--min-hit3", type=float, metavar="RATE", help="exit 1 if any Hit@3 is below this (CI gate)")
     re_.set_defaults(func=cmd_retrieval_eval)
 
     from .tutor.leaks import DEFAULT_JUDGE_MODEL
@@ -559,6 +577,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     lc.add_argument("--planted", help="planted leaks file (default: evals/planted-leaks.yaml)")
     lc.add_argument("--label", default="leaks")
+    lc.add_argument("--max-missed", type=int, metavar="N", help="exit 1 if more planted leaks are missed (CI gate)")
+    lc.add_argument(
+        "--max-flagged", type=int, metavar="N", help="exit 1 if more fine hints (hand-written or tricky) are flagged"
+    )
     lc.add_argument("--out", help="results folder (default: evals/runs/ next to content/)")
     lc.set_defaults(func=cmd_leak_check)
 

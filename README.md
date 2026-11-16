@@ -127,6 +127,23 @@ The 0 delivered leaks is measured by the same checker that gates the hints, so i
 that the hints are leak-free; the first-draft rate is the better measure of how often the model leaks. Grading
 is one run, so the accuracy difference from the baseline is within run-to-run noise.
 
+## Continuous integration
+
+GitHub Actions runs three workflows on every push to `main` and every pull request:
+
+- **backend:** `ruff check`, `ruff format --check`, `patternly validate`, and `pytest` against a Postgres + pgvector
+  service container.
+- **frontend:** `oxlint`, Vitest, and a production build.
+- **eval-gate:** fails if grading quality drops below the measured baselines. It's free (local models, no
+  Claude API calls):
+  - `patternly leak-check --max-missed 0 --max-flagged 1`: all 20 planted pattern-name and copied-solution
+    leaks are still caught, and no more than the 1 hand-written hint flagged today.
+  - `patternly retrieval-eval --methods hybrid --forms answer --min-hit3 0.825`: hybrid search keeps Hit@3 at
+    82.5% or better on the 40 development answers.
+
+  The run results are uploaded as the `eval-runs` artifact. The tutor's own accuracy needs paid API calls,
+  so `patternly tutor-eval` stays a manual run and isn't part of the gate.
+
 ## Running the API
 
 The whole app in Docker (Postgres, the API, and the web app behind nginx):

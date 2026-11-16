@@ -320,3 +320,24 @@ def test_agent_eval_resubmits_until_pass_or_three(content, tmp_path):
     assert summary["verdict_flips_on_resubmit"] == 0
     assert summary["first_attempt"]["false_pass_rate"] == 0.0
     assert (out / "summary.md").exists()
+
+
+def test_leak_check_gate_exit_codes(content_dir, tmp_path, capsys):
+    import yaml
+
+    from patternly.cli import main
+
+    content_dir.patterns([{"id": "p", "name": "Hidden Trick", "aliases": ["HT"]}])
+    content_dir.scenario(scenario("s1", "p"))
+    content_dir.answers(answer_set("s1"))
+    planted = tmp_path / "planted.yaml"
+    leaks = [
+        {"scenario": "s1", "level": 1, "kind": "pattern-name", "hint": "Use the Hidden Trick."},
+        {"scenario": "s1", "level": 1, "kind": "pattern-name", "hint": "A leak the checker can't see."},
+    ]
+    planted.write_text(yaml.safe_dump({"leaks": leaks}))
+    base = ["--content", str(content_dir.root), "leak-check", "--planted", str(planted), "--out"]
+    assert main([*base, str(tmp_path / "a")]) == 0  # no gate: just a report
+    assert main([*base, str(tmp_path / "b"), "--max-missed", "1"]) == 0
+    assert main([*base, str(tmp_path / "c"), "--max-missed", "0"]) == 1
+    assert "GATE FAILED: 1 planted leaks missed (allowed: 0)" in capsys.readouterr().err

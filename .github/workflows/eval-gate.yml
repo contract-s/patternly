@@ -1,0 +1,59 @@
+# Fails if grading quality drops: the leak checker must still catch the planted leaks without flagging more
+# fine hints, and note retrieval must keep its measured Hit@3. All free: local models, no Claude API calls.
+# The thresholds are the measured baselines (see the README); change them only with a new measured run.
+name: eval-gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  FASTEMBED_CACHE_PATH: ${{ github.workspace }}/.fastembed-cache
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: patternly
+          POSTGRES_PASSWORD: patternly
+          POSTGRES_DB: patternly
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U patternly -d patternly" --health-interval 2s --health-timeout 3s
+          --health-retries 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.7"
+          enable-cache: true
+      - uses: actions/cache@v4
+        with:
+          path: .fastembed-cache
+          key: fastembed-bge-small-en-v1.5
+      - run: uv sync --locked
+
+      - name: Leak checker (20 planted leaks, 94 fine hints)
+        run: uv run patternly leak-check --out "$RUNNER_TEMP/runs" --max-missed 0 --max-flagged 1
+
+      - name: Index the pattern notes
+        run: uv run patternly index
+
+      - name: Retrieval (hybrid, learner's answer as the query)
+        run: >-
+          uv run patternly retrieval-eval --out "$RUNNER_TEMP/runs" --methods hybrid --forms answer
+          --min-hit3 0.825
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-runs
+          path: ${{ runner.temp }}/runs
