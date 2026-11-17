@@ -65,7 +65,7 @@ SES rejects (for example, an unverified address in the sandbox) is recorded as f
 
 ## Demo limits
 
-The site is public, so tutor spend is capped (see "Demo limits" in the main README): $1 a day across everyone and
+The site is public, so tutor spend is capped (see "Demo limits" in [docs/how-it-works.md](../docs/how-it-works.md#demo-limits)): $1 a day across everyone and
 5 tutor-graded attempts per learner a day, after which attempts use the free offline grader, plus 5 new accounts
 per IP an hour. To change them, add `PATTERNLY_DAILY_BUDGET_USD`, `PATTERNLY_TUTOR_ATTEMPTS_PER_LEARNER`, or
 `PATTERNLY_SIGNUPS_PER_IP_PER_HOUR` to `/opt/patternly/.env` and rerun the setup script.

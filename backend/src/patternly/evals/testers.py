@@ -1,6 +1,6 @@
 """Tester-trial metrics from the database: hints to solve, daily completion, and longest streak.
 
-Definitions (also in the README):
+Definitions (also in docs/how-it-works.md):
 - Trial window: `days` local days from `start`, only counting days that are over in every time zone, so a day
   still in progress somewhere never counts as missed.
 - Daily completion: tester-days with a finished lesson (passed or revealed) / (testers x days in the window).

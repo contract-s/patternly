@@ -1,6 +1,6 @@
 # Fails if grading quality drops: the leak checker must still catch the planted leaks without flagging more
 # fine hints, and note retrieval must keep its measured Hit@3. All free: local models, no Claude API calls.
-# The thresholds are the measured baselines (see the README); change them only with a new measured run.
+# The thresholds are the measured baselines (see docs/evaluation.md); change them only with a new measured run.
 name: eval-gate
 
 on:
