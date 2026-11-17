@@ -149,7 +149,7 @@ Resources:
           set -euxo pipefail
           exec > >(tee -a /var/log/patternly-setup.log) 2>&1
           apt-get update -q && apt-get install -y -q git
-          git clone https://github.com/contract-s/patternly.git /opt/patternly
+          git clone https://github.com/skodali31/patternly.git /opt/patternly
           /opt/patternly/deploy/setup-instance.sh ${AWS::Region} ${ParameterPrefix}
 
   SenderIdentity:

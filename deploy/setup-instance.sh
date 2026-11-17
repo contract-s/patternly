@@ -11,7 +11,7 @@ set -euo pipefail
 REGION=${1:?region}
 PREFIX=${2:?ssm parameter prefix, e.g. /patternly}
 APP_DIR=/opt/patternly
-REPO=https://github.com/contract-s/patternly.git
+REPO=https://github.com/skodali31/patternly.git
 
 log() { echo "[setup] $*"; }
 
