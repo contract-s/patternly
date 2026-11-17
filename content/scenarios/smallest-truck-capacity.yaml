@@ -9,10 +9,12 @@ rubric:
 - id: feasibility-check
   idea: For a candidate capacity, simulates the loading greedily, counting how many days it takes, and compares that to D.
 - id: monotonic
+  minor: true
   idea: Notes that if a capacity works, any larger capacity works too, so feasibility flips once.
 - id: narrow-range
   idea: If the candidate works, tries smaller (keeping it as a possible answer); if it doesn't, tries larger.
 - id: cost
+  minor: true
   idea: 'O(n log W) where W is the total weight: a linear check per step, with a logarithmic number of steps.'
 hints:
 - 'Try flipping the question: if someone hands you a capacity, can you check quickly whether it finishes within D days?'

@@ -13,6 +13,7 @@ rubric:
 - id: skip-equal
   idea: Recurses only on the smaller and greater parts, never on the equal block, since it's already in place.
 - id: cost
+  minor: true
   idea: Explains this is fast when there are few distinct values (roughly O(n log d) for d distinct values, close to linear here) and O(n log n) on average in general.
 hints:
 - There are only five possible priorities across millions of tickets. When the current sort splits around a chosen value, how big is each side if most tickets equal that value?

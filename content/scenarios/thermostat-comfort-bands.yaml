@@ -5,6 +5,7 @@ prompt: |
   A building stores today's temperature readings in one big array. For a heat-map export, rearrange the array in place so every reading below 18 C comes first, then every reading from 18 to 22 C, then every reading above 22 C. Memory on the controller is tight, so you can't copy the array, and it should take a single pass.
 rubric:
 - id: classify-three
+  minor: true
   idea: Treats each reading as one of three groups by comparing it with the two thresholds.
 - id: three-pointers
   idea: Keeps a boundary for the end of the low group, a boundary for the start of the high group, and a scanning pointer between them.
@@ -15,6 +16,7 @@ rubric:
 - id: middle-skip
   idea: A middle-band reading is left in place and the scanner just moves on.
 - id: linear-in-place
+  minor: true
   idea: 'Each reading is looked at a constant number of times: O(n) time and O(1) extra space.'
 hints:
 - Every reading falls into exactly one of three bands. Which band belongs at the very start of the array and which at the very end?

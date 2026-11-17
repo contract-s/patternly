@@ -13,8 +13,10 @@ rubric:
 - id: push-current
   idea: Then pushes the current day onto the stack.
 - id: leftovers-zero
+  minor: true
   idea: Days still on the stack at the end never got a warmer day, so their answer is 0.
 - id: linear
+  minor: true
   idea: Each day is pushed and popped at most once, so O(n).
 hints:
 - Go through the days in order. When a warm day arrives, which earlier days just found their answer?

@@ -5,6 +5,7 @@ prompt: |
   A university planner gets a list of courses and their prerequisites (for example, Data Structures needs Intro to Programming). Produce an order in which a student can take every course, one at a time, or report that it's impossible because prerequisites loop.
 rubric:
 - id: directed-graph
+  minor: true
   idea: Models courses as nodes with a directed edge from each prerequisite to the course that needs it.
 - id: indegree
   idea: Counts how many unmet prerequisites each course has.
@@ -15,6 +16,7 @@ rubric:
 - id: cycle-detect
   idea: If the order ends up shorter than the number of courses, there's a prerequisite loop and no plan exists.
 - id: cost
+  minor: true
   idea: O(V + E).
 hints:
 - Which courses can a student take on day one, before anything else?

@@ -5,6 +5,7 @@ prompt: |
   A mapping team has a satellite image turned into a grid where each cell is land or water. Two land cells belong to the same land mass if they touch up, down, left, or right. Count how many separate land masses are in the image.
 rubric:
 - id: grid-graph
+  minor: true
   idea: Treats land cells as nodes connected to neighboring land cells.
 - id: scan-cells
   idea: Goes over every cell in the grid.
@@ -15,6 +16,7 @@ rubric:
 - id: visited-marking
   idea: Marks cells visited (or flips them to water) so a land mass isn't counted twice.
 - id: linear-cells
+  minor: true
   idea: O(rows x columns), since each cell is visited a constant number of times.
 hints:
 - A land mass is a group of land cells that all connect to each other. If you're standing on one land cell, how would you find every cell in its group?

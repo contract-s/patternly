@@ -5,16 +5,19 @@ prompt: |
   A city metro app needs to tell riders the route between two stations with the fewest stops. You have a list of which stations connect directly to each other, and every hop counts the same. Find the minimum number of hops and the route.
 rubric:
 - id: graph-model
+  minor: true
   idea: Models stations as nodes and direct connections as edges.
 - id: queue-by-level
   idea: Starts from the origin and explores stations in order of distance using a FIFO queue, one ring of neighbors at a time.
 - id: visited-on-enqueue
   idea: Marks a station as visited when it's added to the queue so it's never added twice.
 - id: first-reach-shortest
+  minor: true
   idea: Explains that because all hops cost the same, the first time the destination is reached is along a fewest-hop route.
 - id: parent-links
   idea: Stores which station each one was reached from, and walks those links back to rebuild the route.
 - id: linear-graph
+  minor: true
   idea: 'Runs in O(V + E): each station and connection is handled once.'
 hints:
 - Every hop costs the same. Think about which stations you can reach in one hop, then in two hops, and so on.

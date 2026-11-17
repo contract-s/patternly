@@ -5,6 +5,7 @@ prompt: |
   A config update is sent from one server and each server forwards it along network links. Each link has a known, non-negative delay. How long until every server has received the update? Return -1 if some server can't be reached.
 rubric:
 - id: weighted-graph
+  minor: true
   idea: Models servers as nodes and links as edges weighted by delay.
 - id: shortest-from-source
   idea: Recognizes each server receives the update at its shortest-delay time from the source.
@@ -15,6 +16,7 @@ rubric:
 - id: max-of-shortest
   idea: Answers with the largest of those shortest delays, since that's when the last server gets it.
 - id: unreachable
+  minor: true
   idea: Returns -1 if any server's delay is still infinity.
 hints:
 - When does one particular server receive the update? Think about the delays along the different routes from the source to it.

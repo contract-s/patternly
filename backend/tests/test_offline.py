@@ -27,3 +27,17 @@ def test_word_overlap_grading_and_hand_written_hints(content_dir):
     history.add(AttemptRecord("u", "s1", 1, "fail", {}, sc.hints[0], 1))
     r = offline_grader(sc, "count failures in the window; shrink from the left when too many", history, "u")
     assert r.verdict == "pass" and r.hint == "" and r.attempt == 2
+
+
+def test_minor_items_can_be_missed(content_dir):
+    content_dir.patterns([{"id": "p", "name": "P"}])
+    s = scenario("s1", "p")
+    s["rubric"] = [
+        {"id": "count", "idea": "Counts the failures inside the window."},
+        {"id": "cost", "idea": "Linear time overall.", "minor": True},
+    ]
+    content_dir.scenario(s)
+    sc = load_content(content_dir.root).scenarios["s1"]
+    r = offline_grader(sc, "I count failures in a window", InMemoryHistory(), "u")
+    assert [c.hit for c in r.items] == [True, False]
+    assert r.verdict == "pass" and r.hint == ""

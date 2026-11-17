@@ -5,6 +5,7 @@ prompt: |
   A delivery app logs one entry per minute saying whether that minute's payments all succeeded or at least one failed. Find the longest stretch of consecutive minutes that contains at most three failed minutes. The log has millions of entries, so checking every possible stretch is too slow.
 rubric:
 - id: contiguous-range
+  minor: true
   idea: Represents the stretch as a range with a left and a right end.
 - id: expand-right
   idea: Moves the right end forward one minute at a time and keeps a running count of failed minutes in the range.
@@ -13,6 +14,7 @@ rubric:
 - id: track-best
   idea: After each step, records the length of the current range if it's the longest valid one seen.
 - id: linear-time
+  minor: true
   idea: Each minute enters the range once and leaves at most once, so the whole thing is linear rather than checking all pairs.
 hints:
 - The answer is one unbroken run of minutes. Instead of trying every start and end, could you reuse work as the run's end moves forward?

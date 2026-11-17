@@ -56,6 +56,9 @@ class Note(Strict):
 class RubricItem(Strict):
     id: str = Field(pattern=SLUG)
     idea: str = Field(min_length=1)
+    # A minor item (a cost statement, the framing, a "why it works" explanation, an edge-case detail)
+    # can be left out of a passing answer. Core items can't.
+    minor: bool = False
 
 
 class Scenario(Strict):
@@ -83,6 +86,10 @@ class Scenario(Strict):
     @property
     def rubric_ids(self) -> list[str]:
         return [item.id for item in self.rubric]
+
+    @property
+    def core_ids(self) -> list[str]:
+        return [item.id for item in self.rubric if not item.minor]
 
 
 class AnswerKind(StrEnum):

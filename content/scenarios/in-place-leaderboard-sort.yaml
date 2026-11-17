@@ -9,12 +9,15 @@ rubric:
 - id: partition
   idea: Rearranges the range so values smaller than the pivot are on its left and larger ones on its right, in place.
 - id: pivot-final
+  minor: true
   idea: Notes the pivot is now in its final sorted position.
 - id: recurse
   idea: Sorts the left part and the right part the same way.
 - id: random-pivot-why
+  minor: true
   idea: Explains that always picking the first or last item is O(n^2) on nearly sorted input, and a random pivot avoids that.
 - id: cost
+  minor: true
   idea: States O(n log n) on average and that it sorts in place, using only recursion-stack memory (O(log n) if the smaller side is handled first).
 hints:
 - Pick one score. Can you rearrange the array, in place, so that score ends up exactly where it belongs in the sorted order?

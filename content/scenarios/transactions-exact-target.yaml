@@ -13,8 +13,10 @@ rubric:
 - id: seed-zero
   idea: Starts the map with total 0 seen once, so stretches starting at the first transaction count.
 - id: why-not-window
+  minor: true
   idea: Explains that because refunds are negative, growing and shrinking a range doesn't work, since adding an item can lower the sum.
 - id: cost
+  minor: true
   idea: O(n) time.
 hints:
 - Refunds are negative, so adding a transaction can make a stretch's sum go down. Why does that break the idea of growing and shrinking a stretch until it hits T?

@@ -2,7 +2,7 @@
 
 A rubric item counts as hit when the answer contains at least half of the item's longer words
 (compared on their first 5 letters, so "shrink" matches "shrinks"). The
-attempt passes when every item is hit. Hints are the scenario's hand-written hints for the level.
+attempt passes when every core (non-minor) item is hit. Hints are the scenario's hand-written hints for the level.
 """
 
 from __future__ import annotations
@@ -29,7 +29,8 @@ def offline_grader(scenario: Scenario, answer: str, history: History, learner_id
         needed = _words(item.idea)
         hit = bool(needed) and len(needed & said) * 2 >= len(needed)
         items.append(ItemCall(rubric_id=item.id, evidence="offline word match", hit=hit))
-    passed = all(c.hit for c in items)
+    core = set(scenario.core_ids)
+    passed = all(c.hit for c in items if c.rubric_id in core)
     level = None if passed else next_hint_level(previous)
     return AttemptResult(
         scenario_id=scenario.id,

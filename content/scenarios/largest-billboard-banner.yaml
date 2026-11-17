@@ -13,8 +13,10 @@ rubric:
 - id: left-from-stack
   idea: The popped building's left boundary is the building now on top of the stack (or the start if it's empty).
 - id: flush-end
+  minor: true
   idea: Handles leftover buildings at the end, for example with a height-0 sentinel.
 - id: linear
+  minor: true
   idea: 'Each building is pushed and popped once: O(n).'
 hints:
 - Suppose you decide which building sets the banner's height. How far left and right can the banner stretch at that height?

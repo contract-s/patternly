@@ -13,8 +13,10 @@ rubric:
 - id: base-cases
   idea: d[i][0] = i and d[0][j] = j, since turning a prefix into an empty word (or the reverse) takes that many edits.
 - id: table-order
+  minor: true
   idea: Fills the table row by row so each cell's three neighbors are already done.
 - id: cost
+  minor: true
   idea: O(m x n) time for words of length m and n.
 hints:
 - Look only at the last letter of each word. If they match, what's left to fix? If they don't, what are the three things you could do with that last letter?

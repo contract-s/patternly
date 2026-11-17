@@ -13,6 +13,7 @@ rubric:
 - id: sorted-output
   idea: Returns each half sorted, so the merge step can count across the halves in linear time.
 - id: cost
+  minor: true
   idea: O(n log n) instead of O(n^2).
 hints:
 - Write the films in critic B's order, but label each one with critic A's rank. What does a disagreeing pair look like in that list?

@@ -5,6 +5,7 @@ prompt: |
   A monitoring dashboard receives response times one at a time, all day, and must always show the median of every response time seen so far. Re-sorting the whole history after each new value is too slow.
 rubric:
 - id: two-halves
+  minor: true
   idea: Splits the values into a lower half and an upper half.
 - id: two-heaps
   idea: Keeps the lower half in a max-heap and the upper half in a min-heap, so the middle values are at the tops.
@@ -15,6 +16,7 @@ rubric:
 - id: read-median
   idea: Reads the median from the top of the bigger half, or averages the two tops when the sizes are equal.
 - id: cost
+  minor: true
   idea: O(log n) per new value and O(1) to read the median.
 hints:
 - The median splits the values into a smaller half and a larger half. Which values in each half do you actually need to look at to find it?

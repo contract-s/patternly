@@ -11,8 +11,10 @@ rubric:
 - id: replace-smallest
   idea: For each hashtag, if it beats the smallest of the 10, removes that smallest and inserts the new one.
 - id: why-min
+  minor: true
   idea: 'Explains why the collection keeps the smallest on top: that''s the one to compare against and evict.'
 - id: cost
+  minor: true
   idea: O(n log k) for n distinct hashtags and k = 10, versus O(n log n) to sort everything.
 hints:
 - You need the top 10, not a full ranking. Once you have counts for every hashtag, do you need to sort millions of them?

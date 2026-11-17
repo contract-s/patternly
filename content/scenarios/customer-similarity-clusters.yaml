@@ -5,6 +5,7 @@ prompt: |
   A marketing team has a similarity distance for every pair of customers and wants exactly k groups, so that customers in different groups are as far apart as possible (the closest pair across groups should be as distant as possible). Describe how to form the groups.
 rubric:
 - id: graph-model
+  minor: true
   idea: Treats customers as nodes and each pairwise distance as a weighted edge.
 - id: sort-edges
   idea: Sorts all pairs from closest to farthest.

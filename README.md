@@ -26,7 +26,10 @@ plus $0.04 for the leak judge.
 Two caveats. The leak rate is measured by the same checker (pattern name, copied solution, model judge) that
 screens hints before delivery, so it shows the screen works, not that a human would find no leaks; on its own the
 judge also flagged 18 of 90 hand-written hints, so it errs toward flagging. Retrieval was only measured on the
-development answers. Development numbers are below.
+development answers.
+
+These sealed runs graded with the rule from before 2026-11-17, when minor rubric items were added (see "Minor
+rubric items" below). The sealed set hasn't been rerun with the new rule. Development numbers are below.
 
 ## Development results
 
@@ -134,6 +137,23 @@ hint (94 attempts). Run:
 The 0 delivered leaks is measured by the same checker that gates the hints, so it shows the guardrail works, not
 that the hints are leak-free; the first-draft rate is the better measure of how often the model leaks. Grading
 is one run, so the accuracy difference from the baseline is within run-to-run noise.
+
+### Minor rubric items
+
+The first version failed any answer that left out a rubric item, even one like "states the O(n) cost". Now 59
+of the 169 items are marked minor: cost statements, the framing ("treat the grid as a graph"), "why it works"
+explanations, and edge-case details. A correct answer that states every core item passes without them, and
+hints only aim at core items. A simple count ("pass at 4 of 6") was tried on paper first and rejected: on the
+development labels it would have passed 5 of 27 failing answers (all missing the key idea) and failed 5 of 13
+valid alternatives.
+
+Every labeled verdict already agreed with the new rule (every failing answer misses a core item), so no labels
+changed. On the 40 development answers (one run,
+[`evals/runs/2026-11-17T021709_tutor-loop-minor-items`](evals/runs/2026-11-17T021709_tutor-loop-minor-items/summary.md)):
+rubric-item accuracy 96.0% of 224, false-pass 0.0% of 27, false-fail 0.0% of 13, alternatives 100% of 7, 3 of
+81 hint drafts rejected, $0.020 and p95 14.6 s per attempt. Since no labeled answer misses only minor items, that
+run can't show the softer rule itself. A spot check did: four new answers stating every core item but no minor
+ones all passed with the new prompt; the old prompt failed one of them (it left out when to stop).
 
 ## Continuous integration
 

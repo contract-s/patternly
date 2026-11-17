@@ -5,6 +5,7 @@ prompt: |
   A delivery company has a road map where each road segment has a travel time in whole minutes (never negative). Every morning it needs the fastest travel time from the depot to every address on the map. The map has about 300,000 intersections, and the times have to be ready within a few seconds.
 rubric:
 - id: weighted-graph
+  minor: true
   idea: Models intersections and addresses as nodes and road segments as weighted edges.
 - id: init-distances
   idea: Sets the depot's time to 0 and every other node's to infinity.
@@ -13,8 +14,10 @@ rubric:
 - id: relax
   idea: For the node taken, checks each road out of it and lowers a neighbor's time if going through this node is faster.
 - id: finalized-why
+  minor: true
   idea: Explains a node's time is final once it's taken from the queue, because times are never negative, so no later path can be shorter.
 - id: cost
+  minor: true
   idea: O((V + E) log V) with a binary heap.
 hints:
 - Out of all the places you haven't settled yet, which one can you be sure you already know the fastest time for?

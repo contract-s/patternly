@@ -5,6 +5,7 @@ prompt: |
   A registrar must place each course's final exam into one of k time slots. If any student takes both courses, the two exams can't share a slot. Given which pairs of courses share students, find a valid assignment or say none exists.
 rubric:
 - id: conflict-graph
+  minor: true
   idea: Models courses as nodes with an edge between courses that share a student.
 - id: assign-one
   idea: Assigns a slot to one course at a time.

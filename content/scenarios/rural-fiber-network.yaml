@@ -5,6 +5,7 @@ prompt: |
   A county wants to connect all of its towns with fiber so any town can reach any other, possibly through other towns. Engineers priced every cable that could be laid between pairs of towns. Choose which cables to lay so all towns are connected and the total cost is as low as possible.
 rubric:
 - id: spanning-framing
+  minor: true
   idea: States the goal as connecting every town with no wasted loops, since a loop means one cable could be removed.
 - id: sort-edges
   idea: Sorts the possible cables from cheapest to most expensive.
@@ -13,8 +14,10 @@ rubric:
 - id: union-find
   idea: Uses a union-find (disjoint set) structure to check whether two towns are already connected and to merge their groups.
 - id: stop-count
+  minor: true
   idea: Is done after laying n - 1 cables for n towns.
 - id: cost
+  minor: true
   idea: O(E log E), dominated by sorting the cables.
 hints:
 - If the network ever has a loop, one cable in that loop could be removed and every town would still be connected. What does that say about the cheapest network?

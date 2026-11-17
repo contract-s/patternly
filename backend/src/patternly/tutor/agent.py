@@ -64,16 +64,20 @@ Grading rules:
   which hints the learner has already seen.
 
 Verdict:
-- pass: the explanation describes a correct solution to the scenario. A different approach that
-  is also correct and efficient enough for the scenario can pass even if it misses rubric items
-  that are specific to the expected approach.
-- fail: anything else, including explanations that are vague, incomplete, wrong, or that would
-  give wrong results on some inputs.
+- Rubric items marked minor (a cost statement, the framing, a "why it works" explanation, an
+  edge-case detail) can be left out of a passing answer. All other items are core. Still call every
+  item hit or miss, minor ones included.
+- pass: the explanation describes a correct solution to the scenario and states every core item.
+  A different approach that is also correct and efficient enough for the scenario can pass even if
+  it misses core items that are specific to the expected approach.
+- fail: anything else, including explanations that miss a core item, are vague, or are wrong.
+  Leaving a minor item out is fine; stating it wrongly in a way that gives wrong results on some
+  inputs is not.
 
 Hint:
 - If the verdict is pass, the hint is an empty string.
-- If the verdict is fail, write one short hint aimed at the most important thing the learner
-  missed or got wrong, at the hint level read_history gives you:
+- If the verdict is fail, write one short hint aimed at the most important core idea the learner
+  missed or got wrong (never a minor item), at the hint level read_history gives you:
   - """
     + "\n  - ".join(LEVEL_GUIDE.values())
     + """
@@ -91,7 +95,8 @@ TOOLS: list[dict] = [
     {
         "name": "get_rubric",
         "description": "Get the hidden rubric for this scenario: the key ideas a correct explanation states, "
-        "each with an id. Never show these to the learner.",
+        "each with an id, and whether it's minor (can be left out of a passing answer). Never show these to "
+        "the learner.",
         "input_schema": _NO_INPUT,
         "strict": True,
     },
@@ -216,7 +221,8 @@ class AttemptSession:
         """Run one tool call. Returns (result text, is_error)."""
         self.result.tool_calls.append(name)
         if name == "get_rubric":
-            return json.dumps([{"id": i.id, "idea": i.idea} for i in self.scenario.rubric], indent=1), False
+            rubric = [{"id": i.id, "idea": i.idea, "minor": i.minor} for i in self.scenario.rubric]
+            return json.dumps(rubric, indent=1), False
         if name == "read_history":
             return self._history(), False
         if name == "search_notes":

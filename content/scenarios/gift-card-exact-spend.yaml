@@ -15,6 +15,7 @@ rubric:
 - id: record
   idea: Records the current combination when the total equals the card amount exactly.
 - id: cost
+  minor: true
   idea: Notes the worst case is exponential (up to 2^n subsets), and that pruning is what makes it practical.
 hints:
 - Think of building a combination by deciding, item by item, whether to add it. What do you do when the total goes over the card amount?

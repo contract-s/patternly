@@ -5,6 +5,7 @@ prompt: |
   A music app wants to show each listener their longest run of consecutive plays where no song played twice. Given the ordered list of song IDs a listener played this year, find the length of that longest run.
 rubric:
 - id: contiguous-range
+  minor: true
   idea: Treats the run as a range between a left and a right position.
 - id: seen-lookup
   idea: Keeps a hash map (or set) of songs in the current range, or each song's last position, for O(1) duplicate checks.
@@ -13,6 +14,7 @@ rubric:
 - id: track-best
   idea: Updates the best length after each new song is added.
 - id: linear-time
+  minor: true
   idea: Each play is added and removed at most once, giving O(n) time.
 hints:
 - You want the longest unbroken run of plays. When a run gets ruined by a repeat, do you really need to start over from scratch?

@@ -13,6 +13,7 @@ rubric:
 - id: boundary
   idea: Narrows until one build is left (low meets high) and correctly lands on the first broken one, not just any broken one.
 - id: log-cost
+  minor: true
   idea: Needs about log2(10,000), around 14 tests, instead of up to 10,000.
 hints:
 - 'Look at the pattern of results across the builds: good, good, ..., broken, broken. What does testing one build in the middle tell you about all the others?'

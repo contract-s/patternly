@@ -5,6 +5,7 @@ prompt: |
   A build system compiles hundreds of modules, and each module can only compile after the modules it depends on finish. There are unlimited build machines, and every module takes the same time. What's the fewest number of rounds to compile everything, and which modules go in each round?
 rubric:
 - id: directed-graph
+  minor: true
   idea: Models modules as nodes with edges from a dependency to the module that needs it.
 - id: indegree
   idea: Counts each module's unbuilt dependencies.

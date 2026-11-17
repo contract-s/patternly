@@ -40,6 +40,8 @@ def check(content: Content) -> list[Issue]:
                 for n, hint in enumerate(s.hints, start=1):
                     if _mentions(hint, phrase):
                         issues.append(Issue("error", where, f"hint {n} names the pattern ('{phrase}')"))
+        if not s.core_ids:
+            issues.append(Issue("error", where, "every rubric item is minor; at least one must be core"))
         if sid not in content.answer_sets:
             issues.append(Issue("warning", where, "no answers file yet"))
 
@@ -63,6 +65,11 @@ def check(content: Content) -> list[Issue]:
                 issues.append(Issue("warning", aw, "kind 'correct' but not a pass with every item hit"))
             if a.kind in (AnswerKind.WRONG_PATTERN, AnswerKind.VAGUE) and a.verdict == Verdict.PASS:
                 issues.append(Issue("warning", aw, f"kind '{a.kind}' labeled as a pass"))
+            core_hit = all(a.labels.get(r) == Label.HIT for r in scenario.core_ids)
+            if a.verdict == Verdict.PASS and not core_hit and a.kind != AnswerKind.ALTERNATIVE:
+                issues.append(Issue("warning", aw, "a pass that misses a core item"))
+            if a.verdict == Verdict.FAIL and core_hit and a.kind not in (AnswerKind.WRONG_PATTERN, AnswerKind.VAGUE):
+                issues.append(Issue("warning", aw, "a fail that hits every core item (only minor items missed)"))
             if a.kind == AnswerKind.ALTERNATIVE and a.verdict != Verdict.PASS:
                 issues.append(Issue("warning", aw, "kind 'alternative' should be a valid approach (pass)"))
 

@@ -5,6 +5,7 @@ prompt: |
   A spreadsheet app needs to warn users when formulas refer to each other in a loop, like A1 uses B2, B2 uses C3, and C3 uses A1. Given each cell and the cells its formula reads from, decide whether any loop exists.
 rubric:
 - id: directed-graph
+  minor: true
   idea: Models each cell as a node with a directed edge to each cell its formula reads.
 - id: explore-each
   idea: Starts an exploration from every cell that hasn't been fully explored yet.
@@ -15,6 +16,7 @@ rubric:
 - id: finished-skip
   idea: Marks a cell finished after all the cells it reads are explored, and skips finished cells later, which keeps it linear.
 - id: linear-graph
+  minor: true
   idea: Runs in O(V + E).
 hints:
 - Draw each cell as a dot with an arrow to every cell its formula reads. What does a circular reference look like in that drawing?

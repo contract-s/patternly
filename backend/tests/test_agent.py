@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -172,6 +173,7 @@ def test_loop_grades_and_records(content):
     results = second["messages"][-1]["content"]
     assert [x["tool_use_id"] for x in results] == ["tu_get_rubric_0", "tu_read_history_0"]
     assert "idea-a" in results[0]["content"] and "level-1" in results[1]["content"]
+    assert [i["minor"] for i in json.loads(results[0]["content"])] == [False, False]
     assert second["tools"] is TOOLS and second["cache_control"] == {"type": "ephemeral"}
     # The pattern name is never sent to the tutor.
     assert "Hidden Trick" not in str(client.messages.calls)

@@ -5,6 +5,7 @@ prompt: |
   A datacenter is laid out as a grid. Each cell is an empty spot, an unpatched server, or a patched server. Every minute, each patched server pushes the patch to unpatched servers directly up, down, left, or right of it. How many minutes until every server is patched? Return -1 if some server can never be reached.
 rubric:
 - id: grid-graph
+  minor: true
   idea: Treats grid cells as nodes with edges to their four neighbors.
 - id: multi-source
   idea: Starts with every initially patched server in the queue at once, not one at a time.
@@ -13,8 +14,10 @@ rubric:
 - id: mark-when-queued
   idea: Marks a server patched as soon as it's queued so it isn't counted twice.
 - id: unreachable-check
+  minor: true
   idea: At the end, checks whether any unpatched server is left and returns -1 if so.
 - id: linear-cells
+  minor: true
   idea: 'O(rows x columns): every cell is queued at most once.'
 hints:
 - The patch spreads outward one step per minute from every patched server at once. What does the set of servers patched after one minute look like? After two?

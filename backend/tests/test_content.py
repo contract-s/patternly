@@ -242,3 +242,21 @@ def test_chunks_from_notes_one_per_section(content_dir):
     chunks = chunks_from_notes(load_content(content_dir.root))
     assert len(chunks) == 6
     assert chunks[0].text.startswith("P: When to reach for it")
+
+
+def test_minor_items(content_dir):
+    content_dir.patterns([{"id": "p", "name": "P"}])
+    s = scenario("s", "p")
+    s["rubric"][1]["minor"] = True
+    content_dir.scenario(s)
+    aset = answer_set("s")
+    partial = next(a for a in aset["answers"] if a["kind"] == "partial")  # hits idea-a, misses minor idea-b
+    content_dir.answers(aset)
+    loaded = load_content(content_dir.root).scenarios["s"]
+    assert loaded.core_ids == ["idea-a"] and loaded.rubric_ids == ["idea-a", "idea-b"]
+    assert any(f"[{partial['id']}]: a fail that hits every core item" in w for w in warnings(content_dir))
+
+    for item in s["rubric"]:
+        item["minor"] = True
+    content_dir.scenario(s)
+    assert any("every rubric item is minor" in e for e in errors(content_dir))

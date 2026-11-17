@@ -9,8 +9,10 @@ rubric:
 - id: range-difference
   idea: Answers a range as total up to the end day minus total up to the day before the start.
 - id: edge-case
+  minor: true
   idea: Handles a range starting at the first day, for example with a leading 0 entry.
 - id: cost
+  minor: true
   idea: Explains it's O(n) once to build and O(1) per query, versus re-adding the days every time.
 hints:
 - Every query adds up a range of days. Is there something you could compute once, ahead of time, so you never have to add up a range again?
