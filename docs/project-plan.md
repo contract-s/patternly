@@ -79,9 +79,9 @@ Six weekends, each ending with something that runs. **Do not start a weekend unt
 
 ### Weekend 6: web app, CI gate, deployment, testers
 - React + TypeScript app, Docker Compose, tracing, and a GitHub Actions workflow that fails if accuracy drops.
-- Deploy to one AWS instance; have 3–5 classmates use it daily for a week with reminder emails on. Record hints needed and daily lesson completion.
+- Deploy to one AWS instance; have 3–5 classmates use it daily for a week with reminder emails on. Record hints needed and daily lesson completion. *Dropped on 2026-11-17: the tester trial was cut from scope, so hints to solve, daily completion, and longest streak are not measured (listed in the README's Limits).*
 - Write the README with a results table and a plain list of limits.
-- **Done when** every metric below has a measured number.
+- **Done when** every metric below has a measured number, except the three tester-trial metrics dropped above.
 
 ## Metrics to measure
 
@@ -94,9 +94,9 @@ Record these in the README as you measure. Only use numbers you actually measure
 | Alternative-solution recognition | Valid but different approaches (e.g. hash map instead of sliding window) that the tutor accepts | TBD |
 | Hint leak rate | Hints containing the pattern name or solution steps before the learner earned them | TBD |
 | Retrieval hit rate | How often the correct pattern note is in the top 3, vector-only vs. hybrid + reranker | TBD |
-| Hints to solve | Average hints needed per scenario by the 3–5 testers | TBD |
-| Daily completion | Share of tester-days with a finished lesson over the 7-day trial | TBD |
-| Longest streak | Median longest streak among testers during the trial | TBD |
+| Hints to solve | Average hints needed per scenario by the 3–5 testers | Dropped (no tester trial) |
+| Daily completion | Share of tester-days with a finished lesson over the 7-day trial | Dropped (no tester trial) |
+| Longest streak | Median longest streak among testers during the trial | Dropped (no tester trial) |
 | Latency and cost | p95 response time and model cost per attempt, from traces | TBD |
 
 LLM outputs vary between runs, so run the test answers several times and report the spread. With a small answer set, state the sample size next to each number.

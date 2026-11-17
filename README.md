@@ -8,17 +8,25 @@ Learn algorithm patterns by explaining first. One lesson a day: read a real-worl
 
 | Metric | Result | Sample size |
 |---|---|---|
-| Rubric-item accuracy | TBD | |
-| False-pass rate | TBD | |
-| Alternative-solution recognition | TBD | |
-| Hint leak rate | TBD | |
-| Retrieval hit rate (vector vs. hybrid + rerank) | TBD | |
-| Hints to solve | TBD | |
-| Daily completion | TBD | |
-| Longest streak (median) | TBD | |
-| p95 latency / cost per attempt | TBD | |
+| Rubric-item accuracy | 94.1% mean over 3 runs (92.9%, 95.5%, 93.8%) | 112 rubric items per run (20 sealed answers) |
+| False-pass rate | 0.0% (0 of 13 in every run) | 13 sealed answers labeled fail |
+| Alternative-solution recognition | 100% (3 of 3 in every run) | 3 sealed alternative answers |
+| Hint leak rate | 0 of 117 delivered hints flagged; 2 of 117 first drafts rejected and rewritten | 39 hints per run, 3 runs |
+| Retrieval hit rate (vector vs. hybrid + rerank) | Hit@3 77.5% vector, 82.5% hybrid, 82.5% hybrid + rerank | 40 development answers |
+| p95 latency / cost per attempt | Eval runs: p95 14.7–15.6 s, $0.017–0.020 per attempt. Live traces: TBD | 46 attempts per run |
 
-Final numbers above come from the sealed test answers once the tutor is finished. Development numbers are below.
+The first four rows are from the tutor loop (`claude-opus-5-5`, effort `medium`, leak judge `claude-haiku-5-5`)
+on the 20 sealed answers, run three times on 2026-11-16 after development was finished. False-fail rate was 0.0%
+(0 of 7) and no verdict changed on resubmission in any run. Runs:
+[1](evals/runs/2026-11-16T170030_sealed-final-run1/summary.md),
+[2](evals/runs/2026-11-16T170151_sealed-final-run2/summary.md),
+[3](evals/runs/2026-11-16T170310_sealed-final-run3/summary.md). Model cost for the three runs: $2.53 for the tutor
+plus $0.04 for the leak judge.
+
+Two caveats. The leak rate is measured by the same checker (pattern name, copied solution, model judge) that
+screens hints before delivery, so it shows the screen works, not that a human would find no leaks; on its own the
+judge also flagged 18 of 90 hand-written hints, so it errs toward flagging. Retrieval was only measured on the
+development answers. Development numbers are below.
 
 ## Development results
 
@@ -203,13 +211,13 @@ one per tool call. Spans go to a JSON Lines file when `PATTERNLY_TRACE_FILE` is 
 With neither, tracing is off.
 
 `patternly trace-report` reads the file and prints p50/p95 tutor and request latency, cost per attempt, and
-model turns per attempt (`--since 2026-11-14` for one stretch, such as the tester week). In Docker:
+model turns per attempt (`--since 2026-11-14` for one stretch). In Docker:
 `docker compose exec api patternly trace-report`.
 
 ### Tester metrics
 
-`patternly tester-report --start 2026-11-16 --exclude you@example.com` reads the database and prints the tester
-trial's numbers, per tester (by learner id) and overall:
+`patternly tester-report --start 2026-11-16 --exclude you@example.com` reads the database and prints numbers for
+a week-long trial with real learners, per learner id and overall. No such trial has been run (see Limits).
 
 - **Daily completion:** tester-days with a finished lesson, out of testers x days in the window (7 by default).
   Only days that are over in every time zone count, so a day still in progress isn't counted as missed.
@@ -233,6 +241,9 @@ a full lesson, the streak growing across days, and a missed pattern coming back 
 - The labeled learner answers were written to cover six answer types, not collected from real learners, so they may be cleaner or more predictable than real explanations.
 - 60 labeled answers is a small set.
 - LLM results vary between runs.
+- Not tested with real learners. There was no tester trial, so there are no numbers for daily completion, hints
+  needed, or streaks, and nothing here shows that the daily habit loop works for anyone. `patternly tester-report`
+  is built for that trial if one happens.
 - After the first baseline run, the development labels were corrected once: three answers were rewritten because
   they were actually correct or ambiguous, two scenario prompts were made more specific, and eight rubric-item labels
   were changed where the rubric text didn't support them. That run is kept in `evals/runs/` for comparison

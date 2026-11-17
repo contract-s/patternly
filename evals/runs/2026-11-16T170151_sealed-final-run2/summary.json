@@ -1,0 +1,50 @@
+{
+  "attempts": 46,
+  "errors": 0,
+  "answers": 20,
+  "first_attempt": {
+    "rubric_item_accuracy": 0.9553571428571429,
+    "rubric_items": 112,
+    "false_pass_rate": 0.0,
+    "false_fail_rate": 0.0,
+    "alternative_acceptance": 1.0,
+    "label_fail": 13,
+    "label_pass": 7,
+    "alternatives": 3
+  },
+  "verdict_flips_on_resubmit": 0,
+  "hints": {
+    "total": 39,
+    "by_level": {
+      "1": 13,
+      "2": 13,
+      "3": 13
+    },
+    "first_draft_leaky": 2,
+    "first_draft_leaks_by_kind": {
+      "revealed-steps": 2
+    },
+    "by_source": {
+      "tutor": 37,
+      "rewrite": 2
+    },
+    "delivered_leaky": 0
+  },
+  "tool_calls": {
+    "get_rubric": 46,
+    "read_history": 46,
+    "record_attempt": 48
+  },
+  "tool_calls_per_attempt": 3.0434782608695654,
+  "turns_per_attempt": 2.0434782608695654,
+  "cost": {
+    "total_usd": 0.8089633,
+    "per_attempt_usd": 0.017586158695652176,
+    "judge_usd": 0.0128185,
+    "cache_read_share_of_input": 0.9163154482087859
+  },
+  "latency_s": {
+    "p50": 11.156375312479213,
+    "p95": 15.602347458014265
+  }
+}
