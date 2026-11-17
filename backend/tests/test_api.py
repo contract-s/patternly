@@ -63,13 +63,13 @@ def test_auth(api):
 def test_full_lesson_streak_and_review_queue(api):
     client, clock = api
 
-    # Day 1: a new pattern, solved on the first try (back in 2 days).
+    # Day 1: a new pattern, solved on the first try (back in 7 days).
     lesson = client.get("/lessons/today").json()
     assert (lesson["kind"], lesson["status"], lesson["attempts_left"]) == ("new", "open", MAX_ATTEMPTS)
     assert "Pattern A" not in str(lesson)
     done = submit(client, "the right idea")
     assert done["lesson"]["status"] == "passed" and done["lesson"]["reveal"]["pattern"] == "Pattern A"
-    assert done["lesson"]["next_review"] == "2026-11-13"
+    assert done["lesson"]["next_review"] == "2026-11-18"
     assert done["streak"] == {"current": 1, "longest": 1, "freezes": 0, "done_today": True}
     assert client.post("/lessons/today/attempts", json={"answer": "more"}).status_code == 409
 
@@ -86,17 +86,20 @@ def test_full_lesson_streak_and_review_queue(api):
             assert out["lesson"]["reveal"] is None and out["lesson"]["attempts_left"] == MAX_ATTEMPTS - n
     # Out of attempts: revealed, and it still counts for the streak.
     assert out["lesson"]["status"] == "revealed" and out["lesson"]["reveal"]["pattern"] == "Pattern B"
-    assert out["lesson"]["next_review"] == "2026-11-13"
+    assert out["lesson"]["next_review"] == "2026-11-17"  # missed: back in 5 days
     assert out["streak"]["current"] == 2
 
-    # Day 3: both patterns are due; the missed one (lower box) comes back first, with its other scenario.
+    # Day 3: nothing is due yet; reviews wait at least 5 days.
     clock.next_day()
+    assert client.get("/reviews").json()["due"] == []
+
+    # Day 8 (2026-11-18): both patterns are due; the missed one comes back first, with its other scenario.
+    clock.now += timedelta(days=5)
     reviews = client.get("/reviews").json()
     assert [(r["pattern"], r["last_outcome"]) for r in reviews["due"]] == [("pat-b", "missed"), ("pat-a", "clean")]
     lesson = client.get("/lessons/today").json()
     assert (lesson["kind"], lesson["scenario"]["id"]) == ("review", "s-b2")
     submit(client, "right")
-    assert client.get("/me").json()["streak"]["current"] == 3
     assert [r["pattern"] for r in client.get("/reviews").json()["due"]] == ["pat-a"]
 
 

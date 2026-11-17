@@ -73,7 +73,7 @@ def test_pass_after_a_hint_finishes_and_schedules(clean_db, content):
         return await get_progress(conn, learner.id), await get_streak(conn, learner, NOON)
 
     progress, streak = run(clean_db, fn)
-    assert progress["pat-a"].box == 1 and progress["pat-a"].due == date(2026, 11, 12)
+    assert progress["pat-a"].box == 1 and progress["pat-a"].due == date(2026, 11, 16)
     assert (streak.current, streak.done_today) == (1, True)
 
 
@@ -84,11 +84,14 @@ def test_missed_pattern_comes_back_as_review(clean_db, content):
             _, lesson = await submit_attempt(conn, content, learner, "wrong", NOON, fake_grader)
         assert (lesson["status"], lesson["outcome"]) == ("revealed", "missed")
         tomorrow = await todays_lesson(conn, content, learner, NOON + timedelta(days=1))
-        return tomorrow
+        later = await todays_lesson(conn, content, learner, NOON + timedelta(days=5))
+        return tomorrow, later
 
-    tomorrow = run(clean_db, fn)
-    # Same pattern, a scenario the learner hasn't seen.
-    assert (tomorrow["pattern_id"], tomorrow["kind"], tomorrow["scenario_id"]) == ("pat-a", "review", "s-a2")
+    tomorrow, later = run(clean_db, fn)
+    # Not the next day: a new pattern comes first.
+    assert (tomorrow["pattern_id"], tomorrow["kind"]) == ("pat-b", "new")
+    # Five days later, the same pattern with a scenario the learner hasn't seen.
+    assert (later["pattern_id"], later["kind"], later["scenario_id"]) == ("pat-a", "review", "s-a2")
 
 
 def test_clean_pass_moves_on_to_a_new_pattern_and_extends_streak(clean_db, content):

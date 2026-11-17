@@ -1,7 +1,8 @@
 """Leitner-style spaced repetition, one box per pattern.
 
 A pattern moves up a box when the learner solves it without hints, stays put when they need hints,
-and drops to box 1 (back tomorrow) when they run out of attempts and the answer is revealed.
+and drops to box 1 when they run out of attempts and the answer is revealed. Even box 1 waits 5 days, so a
+review tests what stuck rather than what was seen yesterday.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import StrEnum
 
-INTERVAL_DAYS = {1: 1, 2: 2, 3: 4, 4: 8, 5: 16}
+INTERVAL_DAYS = {1: 5, 2: 7, 3: 14, 4: 30, 5: 60}
 TOP_BOX = max(INTERVAL_DAYS)
 
 

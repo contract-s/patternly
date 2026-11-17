@@ -22,7 +22,7 @@ def test_new_pattern_boxes():
     assert schedule(None, "p", Outcome.CLEAN, D).box == 2
     assert schedule(None, "p", Outcome.HINTED, D).box == 1
     missed = schedule(None, "p", Outcome.MISSED, D)
-    assert missed.box == 1 and missed.due == D + timedelta(days=1)
+    assert missed.box == 1 and missed.due == D + timedelta(days=5)
 
 
 def test_boxes_move_up_stay_and_reset():

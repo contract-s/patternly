@@ -191,9 +191,10 @@ How a day works:
   there is one.
 - **Lesson.** Up to 4 attempts. Hints climb from level 1 to 3. A pass reveals the pattern; after the 4th failed
   attempt it's revealed anyway and counted as missed.
-- **Spaced repetition.** Leitner boxes per pattern, reviewed after 1, 2, 4, 8, or 16 days. Solving on the
+- **Spaced repetition.** Leitner boxes per pattern, reviewed after 5, 7, 14, 30, or 60 days. Solving on the
   first try moves a pattern up a box, needing hints keeps it in place, and a miss sends it back to box 1, so it
-  returns the next day.
+  returns in 5 days. Even a miss waits that long: a review the next day would only test short-term memory, and
+  new patterns fill the days in between.
 - **Streak.** Days in a row with a finished lesson, in the learner's time zone. Every 7 in a row earns a streak
   freeze (at most 2), used up automatically to cover a missed day.
 - **Reminder.** If today's lesson isn't finished by the learner's chosen hour (7 pm local unless they change
