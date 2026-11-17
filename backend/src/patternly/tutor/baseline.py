@@ -1,7 +1,7 @@
-"""Weekend 2 baseline tutor: one prompt with the scenario, rubric, and answer; structured output back.
+"""Baseline tutor: one prompt with the scenario, rubric, and answer; structured output back.
 
-Deliberately simple. No tools, no leak checker. It's the number later weekends have to beat.
-Weekend 3 adds one option: pass retrieved pattern notes and they go into the prompt as reference.
+Deliberately simple. No tools, no leak checker. It's the number later versions have to beat.
+One option: pass retrieved pattern notes and they go into the prompt as reference.
 """
 
 from __future__ import annotations

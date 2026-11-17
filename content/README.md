@@ -20,7 +20,7 @@ From `backend/`:
 
 ```bash
 uv run patternly validate     # schema, cross-references, and label checks
-uv run patternly stats        # counts and the Weekend 1 checklist
+uv run patternly stats        # counts and the content checklist
 uv run patternly seal         # once all 60 answers are labeled: pick the 20 sealed answers
 ```
 

@@ -76,7 +76,7 @@ class ContentDir:
         (self.root / rel).write_text(text, encoding="utf-8")
 
     def full(self, n_patterns: int = 5, per_pattern: int = 2) -> None:
-        """A complete Weekend 1 set: 5 patterns x 2 scenarios x 6 answers = 60."""
+        """A complete content set: 5 patterns x 2 scenarios x 6 answers = 60."""
         self.patterns([{"id": f"pat-{p}", "name": f"Pattern {p}"} for p in range(n_patterns)])
         for p in range(n_patterns):
             for i in range(per_pattern):

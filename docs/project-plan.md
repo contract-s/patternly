@@ -26,7 +26,7 @@ Patternly teaches algorithm patterns by making you **explain first**. Each day y
 5. **Streak.** Finishing a lesson counts for today. Count days in the learner's own time zone, and decide whether a missed day resets the streak or uses a streak freeze.
 6. **Remind.** A scheduled job (cron or Celery beat) emails a reminder via a service such as Amazon SES if today's lesson isn't done.
 
-**Content planning:** the 10 scenarios from weekend 1 cover the first 10 days. Growing to 10 patterns × 3 scenarios gives 30 days before anything repeats, so write new scenarios as you go.
+**Content planning:** the 10 scenarios from phase 1 cover the first 10 days. Growing to 10 patterns × 3 scenarios gives 30 days before anything repeats, so write new scenarios as you go.
 
 ## Architecture and stack
 
@@ -50,34 +50,34 @@ A learner's answer goes to a FastAPI service. A tutor agent retrieves the rubric
 
 ## Build plan
 
-Six weekends, each ending with something that runs. **Do not start a weekend until the previous one's check passes.**
+Six phases, each ending with something that runs. **Do not start a phase until the previous one's check passes.**
 
-### Weekend 1: content and test answers
+### Phase 1: content and test answers
 - Write 10 scenarios across 5 patterns. For each, write the hidden rubric of key ideas and a reference solution.
 - Write 6 learner answers per scenario ranging from fully correct to wrong: correct, partly correct, missing a key idea, wrong pattern, vague, and correct-but-different valid approach.
 - Label which rubric items each answer hits or misses. Set aside 20 answers as a **sealed test set**.
 - **Done when** all 60 answers have labels.
 
-### Weekend 2: baseline tutor
+### Phase 2: baseline tutor
 - Simplest version: one prompt containing the scenario, the rubric, and the learner's answer, returning structured JSON with hits, misses, and a hint.
 - **Done when** you have baseline rubric-item accuracy and false-pass rate on the non-sealed answers.
 
-### Weekend 3: retrieval and pattern notes
+### Phase 3: retrieval and pattern notes
 - Write short notes on each pattern, store them in pgvector with full-text search, and add a reranker.
 - Ground the tutor in the retrieved notes and measure the change against the baseline.
 - **Done when** you can state whether retrieval improved grading or hints.
 
-### Weekend 4: agent, guardrails, hint ladder
+### Phase 4: agent, guardrails, hint ladder
 - Write the tutor loop yourself with the four tools. Add three hint levels, from a nudge to a stronger clue.
 - Add the leak checker and Pydantic validation, and plant leaky hints to test the checker.
 - **Done when** planted leaks are caught and the leak rate is measured.
 
-### Weekend 5: learning engine and service
+### Phase 5: learning engine and service
 - Store attempts and history in Postgres; add the spaced-repetition scheduler, daily planner, and streak tracking.
 - FastAPI endpoints with JWT login and pytest tests.
 - **Done when** a full lesson works through the API, finishing it extends your streak, and a missed pattern comes back in the review queue.
 
-### Weekend 6: web app, CI gate, deployment, testers
+### Phase 6: web app, CI gate, deployment, testers
 - React + TypeScript app, Docker Compose, tracing, and a GitHub Actions workflow that fails if accuracy drops.
 - Deploy to one AWS instance; have 3–5 classmates use it daily for a week with reminder emails on. Record hints needed and daily lesson completion. *Dropped on 2026-11-17: the tester trial was cut from scope, so hints to solve, daily completion, and longest streak are not measured (listed in the README's Limits).*
 - Write the README with a results table and a plain list of limits.

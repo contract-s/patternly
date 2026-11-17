@@ -8,7 +8,7 @@ import yaml
 from patternly.cli import main
 from patternly.content.loader import find_content_dir, load_content
 from patternly.content.split import choose_sealed, write_split
-from patternly.content.validate import check, weekend1_progress
+from patternly.content.validate import check, content_progress
 
 from .conftest import answer_set, scenario
 
@@ -26,7 +26,7 @@ def test_full_set_is_clean_and_counts_as_labeled(content_dir):
     content = load_content(content_dir.root)
     issues = check(content)
     assert issues == []
-    progress = weekend1_progress(content, issues)
+    progress = content_progress(content, issues)
     assert (progress.patterns_used, progress.scenarios, progress.labeled_answers) == (5, 10, 60)
     assert not progress.done  # not sealed yet
 
@@ -79,7 +79,7 @@ def test_labels_must_cover_rubric_exactly(content_dir):
     assert any("[partial]" in e and "unknown rubric items: idea-z" in e for e in errs)
 
     content = load_content(content_dir.root)
-    assert weekend1_progress(content, check(content)).labeled_answers == 4
+    assert content_progress(content, check(content)).labeled_answers == 4
 
 
 def test_answers_for_missing_scenario(content_dir):
@@ -138,7 +138,7 @@ def test_dev_and_sealed_partition(content_dir):
     dev = {la.key for la in content.dev_answers()}
     sealed = {la.key for la in content.sealed_answers()}
     assert len(sealed) == 20 and len(dev) == 40 and not dev & sealed
-    assert weekend1_progress(content, check(content)).done
+    assert content_progress(content, check(content)).done
 
 
 def test_write_split_refuses_to_overwrite(content_dir):

@@ -16,7 +16,7 @@ from .content.validate import (
     TARGET_SCENARIOS,
     TARGET_SEALED,
     check,
-    weekend1_progress,
+    content_progress,
 )
 
 
@@ -40,7 +40,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 def cmd_stats(args: argparse.Namespace) -> int:
     content = load_content(_content_dir(args))
     issues = check(content)
-    progress = weekend1_progress(content, issues)
+    progress = content_progress(content, issues)
 
     print("Scenarios per pattern")
     per_pattern = Counter(s.pattern for s in content.scenarios.values())
@@ -62,20 +62,20 @@ def cmd_stats(args: argparse.Namespace) -> int:
         mark = "x" if have >= want else " "
         return f"  [{mark}] {label:30} {have}/{want}"
 
-    print("\nWeekend 1 checklist")
+    print("\nContent checklist")
     print(row("patterns with scenarios", progress.patterns_used, TARGET_PATTERNS))
     print(row("scenarios", progress.scenarios, TARGET_SCENARIOS))
     print(row("labeled answers", progress.labeled_answers, TARGET_SCENARIOS * ANSWERS_PER_SCENARIO))
     print(row("sealed test answers", progress.sealed, TARGET_SEALED))
     print(f"  [{'x' if progress.errors == 0 else ' '}] {'no validation errors':30} {progress.errors} error(s)")
-    print(f"\nWeekend 1 {'DONE' if progress.done else 'not done yet'}")
+    print(f"\nContent {'DONE' if progress.done else 'not done yet'}")
     return 0
 
 
 def cmd_seal(args: argparse.Namespace) -> int:
     content = load_content(_content_dir(args))
     issues = check(content)
-    progress = weekend1_progress(content, issues)
+    progress = content_progress(content, issues)
     if progress.errors:
         print("Fix validation errors before sealing (run `patternly validate`).", file=sys.stderr)
         return 1
@@ -519,7 +519,7 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("--strict", action="store_true", help="treat warnings as failures")
     v.set_defaults(func=cmd_validate)
 
-    s = sub.add_parser("stats", help="show counts and the Weekend 1 checklist")
+    s = sub.add_parser("stats", help="show counts and the content checklist")
     s.set_defaults(func=cmd_stats)
 
     seal = sub.add_parser("seal", help="choose the sealed test set and write splits.yaml")

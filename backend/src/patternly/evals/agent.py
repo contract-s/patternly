@@ -1,4 +1,4 @@
-"""Run the Weekend 4 tutor loop over labeled answers, as a learner who resubmits the same answer.
+"""Run the tool-using tutor loop over labeled answers, as a learner who resubmits the same answer.
 
 Each answer is submitted up to three times (stopping once it passes), with a fresh history, so a
 failing answer collects a level 1, 2, and 3 hint. Attempt 1 is comparable to the baseline grader.

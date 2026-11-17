@@ -1,9 +1,9 @@
-"""Weekend 4 tutor: a tool-calling loop with four tools, a three-level hint ladder, and a leak guardrail.
+"""The tutor: a tool-calling loop with four tools, a three-level hint ladder, and a leak guardrail.
 
 The tools:
 - get_rubric: the hidden key ideas for this scenario.
 - read_history: the learner's earlier attempts at this scenario, and the hint level for this one.
-- search_notes: pattern notes found by hybrid search (optional; Weekend 3 found they don't help grading).
+- search_notes: pattern notes found by hybrid search (optional; the retrieval eval found they don't help grading).
 - record_attempt: submit the grade and hint. The input is validated (exact rubric ids, verdict and hint
   consistent) and the hint goes through the leak checker. A rejected call comes back as a tool error
   saying why, so the model can fix it. After MAX_HINT_REWRITES rejected hints, the scenario's

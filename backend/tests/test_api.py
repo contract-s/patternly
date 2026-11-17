@@ -1,4 +1,4 @@
-"""The API end to end, with a fake tutor and a scratch database: the Weekend 5 "Done when" check."""
+"""The API end to end, with a fake tutor and a scratch database."""
 
 from __future__ import annotations
 

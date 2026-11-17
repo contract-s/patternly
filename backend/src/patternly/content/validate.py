@@ -1,4 +1,4 @@
-"""Cross-file checks on loaded content, plus the Weekend 1 "done" check."""
+"""Cross-file checks on loaded content, plus the content "done" check."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from .loader import ANSWERS_DIR, NOTES_DIR, SCENARIOS_DIR, SPLIT_FILE, Content, Issue
 from .models import AnswerKind, Label, Verdict
 
-# Weekend 1 targets from the project plan.
+# Content targets from the project plan.
 TARGET_PATTERNS = 5
 TARGET_SCENARIOS = 10
 ANSWERS_PER_SCENARIO = len(AnswerKind)  # one of each kind
@@ -125,7 +125,7 @@ class Progress:
         )
 
 
-def weekend1_progress(content: Content, issues: list[Issue]) -> Progress:
+def content_progress(content: Content, issues: list[Issue]) -> Progress:
     """An answer counts as labeled only when it has no errors of its own."""
     bad = {i.where for i in issues if i.level == "error"}
     labeled = sum(

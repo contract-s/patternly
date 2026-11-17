@@ -1,4 +1,4 @@
-"""A learner's past attempts. In memory for now; Weekend 5 moves this into Postgres."""
+"""A learner's past attempts. In memory here; the service stores attempts in Postgres."""
 
 from __future__ import annotations
 

@@ -343,7 +343,7 @@ def _attempt(scenario, a: dict) -> AttemptOut:
 
 
 def tutor_grader(client, checker, *, model: str, effort: str, search=None) -> L.Grader:
-    """The real grader: the Weekend 4 tool-using tutor."""
+    """The real grader: the tool-using tutor."""
     from ..tutor.agent import run_attempt
 
     def grade(scenario, answer, history, learner_id):

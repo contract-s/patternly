@@ -2,7 +2,7 @@
 
 Learn algorithm patterns by explaining first. One lesson a day: read a real-world scenario, describe your solution in plain words, and an AI tutor tells you which key ideas you hit, which you missed, and gives a hint without giving away the answer. Cover the key ideas and it reveals the pattern.
 
-> Status: Weekend 2 (baseline tutor) done; Weekend 3 (pattern notes and retrieval) done; Weekend 4 (tool-using tutor, hint ladder, leak checker) done; Weekend 5 (learning engine and API) done. 15 patterns, 30 scenarios, and 60 labeled learner answers for 10 of them (20 sealed for final metrics), plus a baseline grader measured on the 40 development answers. See [docs/project-plan.md](docs/project-plan.md).
+> Status: all six phases done: grading evals, retrieval, the tool-using tutor with a leak checker, the learning engine and API, the web app, tracing, CI with an eval gate, and an AWS deploy with email reminders. The planned tester trial was dropped (see Limits). 15 patterns, 30 scenarios, and 60 labeled learner answers (20 sealed for final metrics). See [docs/project-plan.md](docs/project-plan.md).
 
 ## Results
 
@@ -255,6 +255,60 @@ it, so I made the hour a setting: each learner picks it in the web app, in their
 
 Tests (`uv run pytest`) run the whole flow through the API with a fake tutor against a scratch database:
 a full lesson, the streak growing across days, and a missed pattern coming back in the review queue.
+
+## Challenges
+
+**Knowing whether the grader is actually right.** A grader that agrees with my labels is only as good as the
+labels, and after the first baseline run I found label mistakes and fixed them. That can quietly bias the labels
+toward whatever the model said. So 20 of the 60 answers were sealed before any tutor work and only used once
+development was finished. The gap showed up: 94.1% rubric-item accuracy on the sealed answers against 96.9% on the
+development answers the prompts were tuned on. The false-pass rate, the number that matters most because a false
+pass teaches a wrong idea, stayed at 0% on both.
+
+**Hints that help without giving the answer away.** The tutor writes good hints, but sometimes too good: 4 of its
+first 81 drafts named the pattern or stated too much. The prompt forbids that, but a rule in the prompt wasn't enough, so every hint goes through a
+leak checker before the learner sees it (pattern name, 8+ words copied from the reference solution, and a judge
+model for "states too many missed ideas"), and a rejected hint goes back with the reason. The hard part is
+calibration: the checker catches all 40 planted leaks, but the judge also flags 18 of the 90 hand-written hints,
+so it's stricter than the hint ladders were written to be. That's still unresolved.
+
+**Strict grading versus fair grading.** The first version failed any answer that left out a rubric item, so a
+correct explanation that never said "O(n)" failed. The obvious fix, "pass at 4 of 6 key ideas", looked fine until
+I ran it against the labels: it would have passed 5 of 27 failing answers (the ones that cover the easy points but
+miss the key insight) and failed 5 of 13 valid alternative solutions. Key ideas aren't equal, so instead each
+rubric item can be marked minor (cost, framing, "why it works", edge cases) and only core items are required.
+Accuracy held on the development set.
+
+**Retrieval that didn't pay off.** I expected pattern notes in the prompt to make grading more accurate. On the
+development set they changed nothing measurable (every verdict the same, accuracy within noise) and cost 65% more
+per call. The reranker was similar: no Hit@3 gain over hybrid search, and about 6.5 seconds per query on a laptop
+CPU. Both stayed optional instead of on by default. The useful part was measuring before building more on it.
+
+**Spacing reviews so they test memory.** The first scheduler brought a missed pattern back the next day. That only
+tested whether yesterday's answer was still fresh. Reviews now wait at least 5 days (then 7, 14,
+30, 60), and new patterns fill the days in between.
+
+**Time zones everywhere.** A "day" is the learner's local day, for lessons, streaks, and reminders. Reminders go
+out at each learner's chosen hour, are claimed in the database before sending so a retry can't send two, and still
+go out if the hourly job was down at the right moment. The trial metrics only count a day once it has ended in
+every time zone, so a day still in progress somewhere isn't counted as missed.
+
+**Email that looks right in real inboxes.** Email clients ignore most CSS, and Gmail doesn't show SVG, so the
+reminder is built from tables with inline styles and a PNG logo, with a plain-text version alongside. Amazon SES
+starts in a sandbox where every recipient must verify their address first, which shapes how testers get added.
+
+**Deploying cheaply with no domain.** One t3.small behind CloudFront, using CloudFront's own HTTPS certificate,
+with no SSH (Session Manager only) and secrets generated on the instance or read from SSM. The local embedding
+models make the API image about 1 GB, and building it on the instance briefly uses most of its memory.
+
+**Tracing across threads.** The tutor runs in a worker thread so it doesn't block the async API. Spans only nest
+under the request if the trace context crosses into that thread, so grading runs through `asyncio.to_thread`,
+which carries it over, and a test checks the nesting.
+
+**Testing without paying for it.** Every model call costs money, so the test suite uses a fake tutor and a scratch
+database, `--offline` grades by word matching for UI work, and the CI eval gate only runs checks that need no API
+calls. The paid evaluations are run by hand and saved under `evals/runs/` so every reported number links to a
+run.
 
 ## Limits
 
