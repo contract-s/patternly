@@ -58,6 +58,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 export const api = {
   register: (email: string, password: string, timezone: string) =>
     request<Token>('POST', '/auth/register', { email, password, timezone }),
+  guest: (timezone: string) => request<Token>('POST', '/auth/guest', { timezone }),
   login: (email: string, password: string) => request<Token>('POST', '/auth/login', { email, password }),
   me: () => request<Me>('GET', '/me'),
   today: () => request<Lesson>('GET', '/lessons/today'),

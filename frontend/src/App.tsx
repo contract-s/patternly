@@ -75,7 +75,18 @@ export default function App() {
           <div className="side-col">
             {streak && <ProgressCard streak={streak} />}
             <ReviewQueue version={graded} />
-            {me && <ReminderSettings key={me.id} initial={me.reminders} timezone={me.timezone} />}
+            {me &&
+              (me.guest ? (
+                <aside className="card guest-card" aria-label="Guest account">
+                  <h3>Guest account</h3>
+                  <p className="muted">
+                    You're trying Patternly as a guest. To keep your streak and get a daily reminder email, log out
+                    and create an account.
+                  </p>
+                </aside>
+              ) : (
+                <ReminderSettings key={me.id} initial={me.reminders} timezone={me.timezone} />
+              ))}
           </div>
         </main>
       ) : (

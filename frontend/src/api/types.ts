@@ -21,6 +21,7 @@ export interface Me {
   id: number
   email: string
   timezone: string
+  guest: boolean // a demo account from "Try it as a guest": no email, no reminders
   streak: Streak
   reminders: Reminders
 }
@@ -33,6 +34,7 @@ export interface Attempt {
   ideas_total: number
   hint: string
   hint_level: number | null
+  graded_by: 'tutor' | 'offline' // 'offline': simple word matching (demo limit reached or the tutor unavailable)
 }
 
 export interface Reveal {

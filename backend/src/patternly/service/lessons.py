@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -23,6 +24,8 @@ MAX_ATTEMPTS = 4  # after this many failed attempts the pattern is revealed (abo
 
 # Grades one attempt. Runs in a worker thread, since the tutor uses the synchronous API client.
 Grader = Callable[[Scenario, str, History, str], AttemptResult]
+
+log = logging.getLogger(__name__)
 
 
 class LessonError(Exception):
@@ -98,18 +101,28 @@ async def _lesson_row(conn: AsyncConnection, learner_id: int, day: date, lock: b
 
 async def lesson_attempts(conn: AsyncConnection, lesson_id: int) -> list[dict]:
     cur = await conn.execute(
-        """SELECT attempt, answer, verdict, items, hint, hint_level FROM attempts
+        """SELECT attempt, answer, verdict, items, hint, hint_level, graded_by FROM attempts
            WHERE lesson_id = %s ORDER BY attempt""",
         (lesson_id,),
     )
-    keys = ["attempt", "answer", "verdict", "items", "hint", "hint_level"]
+    keys = ["attempt", "answer", "verdict", "items", "hint", "hint_level", "graded_by"]
     return [dict(zip(keys, r, strict=True)) for r in await cur.fetchall()]
 
 
 async def submit_attempt(
-    conn: AsyncConnection, content: Content, learner: Learner, answer: str, now: datetime, grader: Grader
+    conn: AsyncConnection,
+    content: Content,
+    learner: Learner,
+    answer: str,
+    now: datetime,
+    grader: Grader,
+    graded_by: str = "tutor",
+    fallback: Grader | None = None,
 ) -> tuple[dict, dict]:
     """Grade an answer to today's lesson. Returns (attempt row, lesson row after the attempt).
+
+    `graded_by` records which grader this is ("tutor" or "offline"). If the grader fails and there's a
+    `fallback` (the offline grader), the fallback grades the attempt instead and it's recorded as "offline".
 
     Runs in one transaction with today's lesson locked, so two submissions can't race; a tutor error
     rolls everything back and nothing is saved.
@@ -137,6 +150,10 @@ async def submit_attempt(
                 )
             )
         result = await asyncio.to_thread(grader, scenario, answer, history, str(learner.id))
+        if (result.error or result.items is None) and fallback is not None:
+            log.warning("Grader failed, using the fallback: %s", result.error)
+            result = await asyncio.to_thread(fallback, scenario, answer, history, str(learner.id))
+            graded_by = "offline"
         if result.error or result.items is None:
             raise LessonError(502, f"The tutor couldn't grade this attempt: {result.error}")
         attempt = {
@@ -146,11 +163,12 @@ async def submit_attempt(
             "items": {c.rubric_id: c.hit for c in result.items},
             "hint": result.hint,
             "hint_level": result.hint_level,
+            "graded_by": graded_by,
         }
         await conn.execute(
             """INSERT INTO attempts (lesson_id, attempt, answer, verdict, items, hint, hint_level, hint_source,
-                                     cost_usd, latency_s)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                                     cost_usd, latency_s, graded_by)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 lesson["id"],
                 attempt["attempt"],
@@ -162,6 +180,7 @@ async def submit_attempt(
                 result.hint_source,
                 result.cost_usd,
                 result.latency_s,
+                graded_by,
             ),
         )
         outcome = None

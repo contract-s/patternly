@@ -64,3 +64,7 @@ CREATE TABLE IF NOT EXISTS reminders (
     created_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (learner_id, local_date)
 );
+
+-- Which grader handled an attempt: the tutor, or the free offline grader (demo limits or --offline).
+ALTER TABLE attempts ADD COLUMN IF NOT EXISTS graded_by text NOT NULL DEFAULT 'tutor'
+    CHECK (graded_by IN ('tutor', 'offline'));

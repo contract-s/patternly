@@ -16,19 +16,21 @@ export default function AuthForm({ onAuthed }: { onAuthed: (token: string) => vo
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function submit(e: FormEvent) {
-    e.preventDefault()
+  async function run(getToken: () => Promise<{ access_token: string }>) {
     setBusy(true)
     setError(null)
     try {
-      const { access_token } =
-        mode === 'login' ? await api.login(email, password) : await api.register(email, password, browserTimeZone())
-      onAuthed(access_token)
+      onAuthed((await getToken()).access_token)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong')
     } finally {
       setBusy(false)
     }
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    run(() => (mode === 'login' ? api.login(email, password) : api.register(email, password, browserTimeZone())))
   }
 
   const isLogin = mode === 'login'
@@ -61,6 +63,12 @@ export default function AuthForm({ onAuthed }: { onAuthed: (token: string) => vo
       <button type="button" className="link" onClick={() => setMode(isLogin ? 'register' : 'login')}>
         {isLogin ? 'New here? Create an account' : 'Have an account? Log in'}
       </button>
+      <div className="guest-try">
+        <button type="button" className="secondary" disabled={busy} onClick={() => run(() => api.guest(browserTimeZone()))}>
+          Try it as a guest
+        </button>
+        <p className="muted">No sign-up needed. Your progress stays with this guest account.</p>
+      </div>
     </form>
   )
 }

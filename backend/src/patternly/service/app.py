@@ -1,6 +1,7 @@
 """The HTTP API.
 
 POST /auth/register, POST /auth/login     -> bearer token
+POST /auth/guest                          -> bearer token for a new guest account (the demo button)
 GET  /me                                  -> learner, streak, and reminder settings
 PUT  /me/reminders                        -> turn reminders on or off and pick their local hour
 GET  /lessons/today                       -> today's lesson (picked on first request of the day)
@@ -10,6 +11,7 @@ GET/POST /reminders/unsubscribe           -> the link in reminder emails
 """
 
 import html
+import secrets
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
@@ -30,8 +32,20 @@ from . import lessons as L
 from . import reminders as R
 from .auth import hash_password, make_token, read_token, verify_password
 from .db import apply_schema, make_pool
+from .demo import DemoLimits, SignupLimiter, client_ip, tutor_allowed
+
+# Guest accounts get addresses on a reserved domain that can never receive mail.
+GUEST_DOMAIN = "guest.invalid"
 
 # ---- request and response models ----
+
+
+def _known_zone(tz: str) -> str:
+    try:
+        ZoneInfo(tz)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise ValueError(f"unknown time zone '{tz}' (use an IANA name like 'America/Detroit')") from None
+    return tz
 
 
 class RegisterIn(BaseModel):
@@ -42,11 +56,16 @@ class RegisterIn(BaseModel):
     @field_validator("timezone")
     @classmethod
     def known_zone(cls, tz: str) -> str:
-        try:
-            ZoneInfo(tz)
-        except (ZoneInfoNotFoundError, ValueError):
-            raise ValueError(f"unknown time zone '{tz}' (use an IANA name like 'America/Detroit')") from None
-        return tz
+        return _known_zone(tz)
+
+
+class GuestIn(BaseModel):
+    timezone: str = "UTC"
+
+    @field_validator("timezone")
+    @classmethod
+    def known_zone(cls, tz: str) -> str:
+        return _known_zone(tz)
 
 
 class LoginIn(BaseModel):
@@ -80,6 +99,7 @@ class MeOut(BaseModel):
     id: int
     email: str
     timezone: str
+    guest: bool
     streak: StreakOut
     reminders: RemindersOut
 
@@ -92,6 +112,7 @@ class AttemptOut(BaseModel):
     ideas_total: int
     hint: str
     hint_level: int | None
+    graded_by: str  # "tutor", or "offline": the word-matching grader (demo limits, a tutor failure, or --offline)
 
 
 class RevealOut(BaseModel):
@@ -152,8 +173,21 @@ def create_app(
     secret: str,
     database_url: str | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    limits: DemoLimits | None = None,
+    grader_name: str = "tutor",
 ) -> FastAPI:
+    """`grader_name` is "offline" when `grader` is already the offline grader (patternly serve --offline)."""
+    from .offline import offline_grader
+
     pool = make_pool(database_url)
+    limits = limits or DemoLimits()
+    signups = SignupLimiter(limits.signups_per_ip_per_hour)
+
+    def check_signup(request: Request) -> None:
+        peer = request.client.host if request.client else None
+        ip = client_ip(request.headers.get("x-forwarded-for"), peer, limits.proxy_hops)
+        if not signups.allow(ip):
+            raise HTTPException(429, "Too many new accounts from this network. Try again in an hour.")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -199,7 +233,10 @@ def create_app(
         return {"ok": True}
 
     @app.post("/auth/register", status_code=201)
-    async def register(body: RegisterIn, conn: Conn) -> TokenOut:
+    async def register(body: RegisterIn, conn: Conn, request: Request) -> TokenOut:
+        if body.email.lower().endswith("@" + GUEST_DOMAIN):
+            raise HTTPException(422, "Use a real email address")
+        check_signup(request)
         try:
             cur = await conn.execute(
                 "INSERT INTO learners (email, password_hash, timezone) VALUES (%s, %s, %s) RETURNING id",
@@ -207,6 +244,18 @@ def create_app(
             )
         except psycopg.errors.UniqueViolation:
             raise HTTPException(409, "That email is already registered") from None
+        return TokenOut(access_token=make_token((await cur.fetchone())[0], secret))
+
+    @app.post("/auth/guest", status_code=201)
+    async def guest(body: GuestIn, conn: Conn, request: Request) -> TokenOut:
+        """A fresh account with a random address and password, so a visitor can try a lesson without signing up.
+        Reminders are off: the address can't receive mail."""
+        check_signup(request)
+        cur = await conn.execute(
+            """INSERT INTO learners (email, password_hash, timezone, reminders_enabled)
+               VALUES (%s, %s, %s, false) RETURNING id""",
+            (f"guest-{secrets.token_hex(8)}@{GUEST_DOMAIN}", hash_password(secrets.token_urlsafe(24)), body.timezone),
+        )
         return TokenOut(access_token=make_token((await cur.fetchone())[0], secret))
 
     @app.post("/auth/login")
@@ -225,12 +274,15 @@ def create_app(
             id=learner.id,
             email=learner.email,
             timezone=learner.timezone,
+            guest=_is_guest(learner),
             streak=_streak(streak),
             reminders=RemindersOut(enabled=enabled, hour=hour),
         )
 
     @app.put("/me/reminders")
     async def set_reminders(body: RemindersIn, learner: Me, conn: Conn) -> RemindersOut:
+        if _is_guest(learner):
+            raise HTTPException(403, "Guest accounts can't get reminder emails. Sign up with an email address.")
         await R.set_settings(conn, learner.id, body.enabled, body.hour)
         return RemindersOut(enabled=body.enabled, hour=body.hour)
 
@@ -267,7 +319,12 @@ def create_app(
     @app.post("/lessons/today/attempts")
     async def attempt(body: AttemptIn, learner: Me, conn: Conn) -> SubmitOut:
         now = clock()
-        a, row = await L.submit_attempt(conn, content, learner, body.answer.strip(), now, grader)
+        g, name = grader, grader_name
+        if name == "tutor" and not await tutor_allowed(conn, learner.id, now, limits):
+            g, name = offline_grader, "offline"
+        # If the tutor fails (an outage, or the API key's spend limit), the offline grader steps in.
+        fallback = offline_grader if name == "tutor" else None
+        a, row = await L.submit_attempt(conn, content, learner, body.answer.strip(), now, g, name, fallback)
         scenario = content.scenarios[row["scenario_id"]]
         return SubmitOut(
             attempt=_attempt(scenario, a),
@@ -325,6 +382,10 @@ def _page(message: str, extra: str = "", status: int = 200) -> HTMLResponse:
     )
 
 
+def _is_guest(learner: L.Learner) -> bool:
+    return learner.email.endswith("@" + GUEST_DOMAIN)
+
+
 def _streak(s: Streak) -> StreakOut:
     return StreakOut(current=s.current, longest=s.longest, freezes=s.freezes, done_today=s.done_today)
 
@@ -339,6 +400,7 @@ def _attempt(scenario, a: dict) -> AttemptOut:
         ideas_total=len(scenario.rubric),
         hint=a["hint"],
         hint_level=a["hint_level"],
+        graded_by=a["graded_by"],
     )
 
 

@@ -12,6 +12,12 @@ services:
     environment:
       DATABASE_URL: postgresql://patternly:${POSTGRES_PASSWORD}@db:5432/patternly
       AWS_REGION: ${AWS_REGION:-us-east-2}  # boto3 sends reminders through SES with the instance role
+      # Demo limits (service/demo.py). Past the budget or the per-learner cap, attempts use the free offline grader.
+      # Override any of them in the .env next to docker-compose.yml.
+      PATTERNLY_DAILY_BUDGET_USD: ${PATTERNLY_DAILY_BUDGET_USD:-1.00}
+      PATTERNLY_TUTOR_ATTEMPTS_PER_LEARNER: ${PATTERNLY_TUTOR_ATTEMPTS_PER_LEARNER:-5}
+      PATTERNLY_SIGNUPS_PER_IP_PER_HOUR: ${PATTERNLY_SIGNUPS_PER_IP_PER_HOUR:-5}
+      PATTERNLY_PROXY_HOPS: 2  # CloudFront, then nginx
 
   web:
     ports: !override

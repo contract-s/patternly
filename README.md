@@ -2,6 +2,11 @@
 
 Learn algorithm patterns by explaining first. One lesson a day: read a real-world scenario, describe your solution in plain words, and an AI tutor tells you which key ideas you hit, which you missed, and gives a hint without giving away the answer. Cover the key ideas and it reveals the pattern.
 
+**Try it live: [d1gzfqnjgnrior.cloudfront.net](https://d1gzfqnjgnrior.cloudfront.net)**. Click "Try it as a guest"
+to do a lesson without signing up. To keep the demo's cost fixed, the tutor has a daily budget; once it's used up,
+attempts are graded by simple word matching until the next day, and the app says so (see
+[Demo limits](#demo-limits)).
+
 > Status: all six phases done: grading evals, retrieval, the tool-using tutor with a leak checker, the learning engine and API, the web app, tracing, CI with an eval gate, and an AWS deploy with email reminders. The planned tester trial was dropped (see Limits). 15 patterns, 30 scenarios, and 60 labeled learner answers (20 sealed for final metrics). See [docs/project-plan.md](docs/project-plan.md).
 
 ## Results
@@ -13,7 +18,7 @@ Learn algorithm patterns by explaining first. One lesson a day: read a real-worl
 | Alternative-solution recognition | 100% (3 of 3 in every run) | 3 sealed alternative answers |
 | Hint leak rate | 0 of 117 delivered hints flagged; 2 of 117 first drafts rejected and rewritten | 39 hints per run, 3 runs |
 | Retrieval hit rate (vector vs. hybrid + rerank) | Hit@3 77.5% vector, 82.5% hybrid, 82.5% hybrid + rerank | 40 development answers |
-| p95 latency / cost per attempt | Eval runs: p95 14.7–15.6 s, $0.017–0.020 per attempt. Live traces: TBD | 46 attempts per run |
+| p95 latency / cost per attempt | Eval runs: p95 14.7–15.6 s, $0.017–0.020 per attempt. Live site: p95 19.0 s, $0.026 mean ($0.035 max) per attempt | Eval: 46 attempts per run. Live: 7 attempts on 2026-11-17, mostly test traffic |
 
 The first four rows are from the tutor loop (`claude-opus-5-5`, effort `medium`, leak judge `claude-haiku-5-5`)
 on the 20 sealed answers, run three times on 2026-11-16 after development was finished. False-fail rate was 0.0%
@@ -26,7 +31,9 @@ plus $0.04 for the leak judge.
 Two caveats. The leak rate is measured by the same checker (pattern name, copied solution, model judge) that
 screens hints before delivery, so it shows the screen works, not that a human would find no leaks; on its own the
 judge also flagged 18 of 90 hand-written hints, so it errs toward flagging. Retrieval was only measured on the
-development answers.
+development answers. The live numbers come from the server's traces (`patternly trace-report --since 2026-11-17`):
+7 graded attempts, mostly test submissions, so with a sample that small the p95 is simply the slowest attempt. Live
+attempts were slower and cost more than in the eval runs; the cause wasn't measured.
 
 These sealed runs graded with the rule from before 2026-11-17, when minor rubric items were added (see "Minor
 rubric items" below). The sealed set hasn't been rerun with the new rule. Development numbers are below.
@@ -197,6 +204,7 @@ cd frontend && npm install && npm run dev      # http://localhost:5173, proxies 
 | Endpoint | What it does |
 |---|---|
 | `POST /auth/register`, `POST /auth/login` | Email, password, and IANA time zone; returns a bearer token (JWT, 7 days) |
+| `POST /auth/guest` | A new guest account (random address on `guest.invalid`, reminders off) for trying a lesson |
 | `GET /me` | The learner, their streak, and their reminder settings |
 | `PUT /me/reminders` | Turns reminder emails on or off and sets the local hour they go out |
 | `GET /lessons/today` | Today's lesson, picked on the first request of the learner's local day |
@@ -222,6 +230,23 @@ How a day works:
   It runs hourly on the server; each reminder is claimed in the database first, so nobody gets two in a day,
   and a learner whose hour passed while the job was down still gets one later that day. Every email has an
   unsubscribe link.
+
+### Demo limits
+
+The live site is public, and every tutor-graded attempt costs money, so spending has a ceiling. All of these are
+off unless their environment variable is set; production sets them in
+[`deploy/docker-compose.prod.yml`](deploy/docker-compose.prod.yml):
+
+| Variable | Production | What happens past it |
+|---|---|---|
+| `PATTERNLY_DAILY_BUDGET_USD` | 1.00 | Tutor spend since midnight UTC reached it: every attempt uses the offline grader until the next UTC day |
+| `PATTERNLY_TUTOR_ATTEMPTS_PER_LEARNER` | 5 | That learner's later attempts today use the offline grader |
+| `PATTERNLY_SIGNUPS_PER_IP_PER_HOUR` | 5 | New accounts (registered or guest) from that address get a 429 |
+
+If the tutor itself fails (an outage, or the API key's own spend limit), the offline grader grades that attempt
+too, so the site keeps working. Each attempt records which grader handled it (`graded_by`), and the web app shows
+a note on any attempt the offline grader handled. The budget is checked before each attempt, so attempts submitted at the same moment can
+overshoot it slightly; a monthly spend limit on the API key is the hard ceiling.
 
 ### Tracing
 
@@ -305,6 +330,12 @@ models make the API image about 1 GB, and building it on the instance briefly us
 under the request if the trace context crosses into that thread, so grading runs through `asyncio.to_thread`,
 which carries it over, and a test checks the nesting.
 
+**Letting anyone try it without an open-ended bill.** A public link on a resume means strangers can run up API
+costs. Rather than hide the app behind an invite code, the server tracks what the tutor spent today and switches
+to the free word-matching grader past a daily budget or a per-learner cap, and caps sign-ups per IP. The app keeps
+working either way and says which grader handled each attempt. The client IP has to come from the right
+`X-Forwarded-For` entry, since anything before CloudFront's entry can be set by the client.
+
 **Testing without paying for it.** Every model call costs money, so the test suite uses a fake tutor and a scratch
 database, `--offline` grades by word matching for UI work, and the CI eval gate only runs checks that need no API
 calls. The paid evaluations are run by hand and saved under `evals/runs/` so every reported number links to a
@@ -316,6 +347,8 @@ run.
 - The labeled learner answers were written to cover six answer types, not collected from real learners, so they may be cleaner or more predictable than real explanations.
 - 60 labeled answers is a small set.
 - LLM results vary between runs.
+- On the live demo, once the daily tutor budget is used up, grading falls back to word matching, which is much
+  weaker than the tutor.
 - Not tested with real learners. There was no tester trial, so there are no numbers for daily completion, hints
   needed, or streaks, and nothing here shows that the daily habit loop works for anyone. `patternly tester-report`
   is built for that trial if one happens.

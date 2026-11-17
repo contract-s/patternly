@@ -63,6 +63,15 @@ Reminders go out at each learner's chosen hour (7 pm local by default, changed i
 the timer did, from a Session Manager shell: `journalctl -u patternly-remind --since today`. A reminder that
 SES rejects (for example, an unverified address in the sandbox) is recorded as failed and not retried that day.
 
+## Demo limits
+
+The site is public, so tutor spend is capped (see "Demo limits" in the main README): $1 a day across everyone and
+5 tutor-graded attempts per learner a day, after which attempts use the free offline grader, plus 5 new accounts
+per IP an hour. To change them, add `PATTERNLY_DAILY_BUDGET_USD`, `PATTERNLY_TUTOR_ATTEMPTS_PER_LEARNER`, or
+`PATTERNLY_SIGNUPS_PER_IP_PER_HOUR` to `/opt/patternly/.env` and rerun the setup script.
+
+As a hard ceiling, give the API key its own workspace in the Anthropic Console with a monthly spend limit.
+
 ## Traces
 
 The API writes OpenTelemetry spans to a Docker volume. For latency and cost per graded attempt, from a Session

@@ -39,3 +39,12 @@ test('shows the API error', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Wrong email or password')
   expect(onAuthed).not.toHaveBeenCalled()
 })
+
+test('try it as a guest', async () => {
+  const guest = vi.spyOn(api, 'guest').mockResolvedValue({ access_token: 'guest-tok', token_type: 'bearer' })
+  const onAuthed = vi.fn()
+  render(<AuthForm onAuthed={onAuthed} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Try it as a guest' }))
+  expect(guest).toHaveBeenCalledWith(Intl.DateTimeFormat().resolvedOptions().timeZone)
+  expect(onAuthed).toHaveBeenCalledWith('guest-tok')
+})

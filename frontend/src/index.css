@@ -380,6 +380,40 @@ button.link {
   font-weight: 500;
 }
 
+button.secondary {
+  background: none;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  box-shadow: none;
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--accent-soft);
+  box-shadow: none;
+  filter: none;
+}
+
+.guest-try {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.guest-try p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.note {
+  border-left: 3px solid var(--muted);
+  padding: 8px 12px;
+  margin: 12px 0 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
 button.link:hover:not(:disabled) {
   box-shadow: none;
   filter: none;

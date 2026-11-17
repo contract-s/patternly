@@ -21,6 +21,12 @@ export default function Critique({ attempt }: { attempt: Attempt }) {
           ))}
         </ul>
       )}
+      {attempt.graded_by === 'offline' && (
+        <p className="note">
+          This try was graded by simple word matching, not the AI tutor, because the tutor isn't available right
+          now (the demo's daily limit may have been reached). Full grading comes back later.
+        </p>
+      )}
       {!passed && attempt.hint && (
         <p className="hint">
           <strong>{LEVEL_LABEL[attempt.hint_level ?? 1] ?? 'Hint'}:</strong> {attempt.hint}

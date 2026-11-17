@@ -17,3 +17,10 @@ test('passed try: no hint', () => {
   expect(screen.getByRole('heading', { name: 'Try 1: you got it' })).toBeInTheDocument()
   expect(screen.queryByText(/Nudge|Shape|Strong clue/)).not.toBeInTheDocument()
 })
+
+test('says when the word-matching grader was used', () => {
+  const { rerender } = render(<Critique attempt={attempt()} />)
+  expect(screen.queryByText(/simple word matching/)).toBeNull()
+  rerender(<Critique attempt={attempt({ graded_by: 'offline' })} />)
+  expect(screen.getByText(/simple word matching/)).toBeInTheDocument()
+})

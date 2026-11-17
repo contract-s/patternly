@@ -17,6 +17,7 @@ export function attempt(over: Partial<Attempt> = {}): Attempt {
     ideas_total: 4,
     hint: 'What happens when the range breaks the rule?',
     hint_level: 1,
+    graded_by: 'tutor',
     ...over,
   }
 }

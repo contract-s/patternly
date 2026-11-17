@@ -25,6 +25,7 @@ test('signed in: shows today\'s lesson', async () => {
     id: 1,
     email: 'me@x.test',
     timezone: 'UTC',
+    guest: false,
     streak: { current: 3, longest: 3, freezes: 0, done_today: false },
     reminders: { enabled: true, hour: 19 },
   })
@@ -43,4 +44,21 @@ test('log out clears the token', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
   expect(localStorage.getItem('patternly.token')).toBeNull()
   expect(screen.getByRole('heading', { name: 'Log in' })).toBeInTheDocument()
+})
+
+test('guests see a sign-up prompt instead of reminder settings', async () => {
+  setToken('tok')
+  vi.spyOn(api, 'today').mockResolvedValue(lesson())
+  stubReviews()
+  vi.spyOn(api, 'me').mockResolvedValue({
+    id: 2,
+    email: 'guest-ab12@guest.invalid',
+    timezone: 'UTC',
+    guest: true,
+    streak: { current: 0, longest: 0, freezes: 0, done_today: false },
+    reminders: { enabled: false, hour: 19 },
+  })
+  render(<App />)
+  expect(await screen.findByRole('heading', { name: 'Guest account' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Reminder emails' })).toBeNull()
 })

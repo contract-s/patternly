@@ -414,7 +414,17 @@ def cmd_serve(args: argparse.Namespace) -> int:
     else:
         judge = None if args.judge == "none" else args.judge
         grader = tutor_grader(anthropic.Anthropic(), _checker(content, judge), model=args.model, effort=args.effort)
-    uvicorn.run(create_app(content, grader, secret=secret), host=args.host, port=args.port)
+    from .service.demo import DemoLimits
+
+    limits = DemoLimits.from_env()
+    if limits.daily_budget_usd is not None or limits.tutor_attempts_per_learner is not None:
+        print(
+            f"Demo limits: ${limits.daily_budget_usd} a day, {limits.tutor_attempts_per_learner} tutor attempts per "
+            "learner a day; past either, the offline grader takes over.",
+            file=sys.stderr,
+        )
+    app = create_app(content, grader, secret=secret, limits=limits, grader_name="offline" if args.offline else "tutor")
+    uvicorn.run(app, host=args.host, port=args.port)
     return 0
 
 
