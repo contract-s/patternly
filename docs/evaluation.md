@@ -160,6 +160,27 @@ run can't show the softer rule itself. A spot check did: four new answers statin
 ones all passed with the new prompt; the old prompt failed one of them (it left out when to stop).
 
 
+## Live use
+
+Between 2026-11-17 and 2026-11-19 the live site graded 14 attempts with the tutor: 11 from three of my own daily
+lessons and 3 test submissions. These are observations from a handful of attempts, not measurements:
+
+- **Minor items on a real answer.** One answer passed without stating the running time (a minor item), which the
+  development labels couldn't show.
+- **Resubmitting the same answer.** The same text sent twice in a row got the same grade both times and a
+  stronger hint the second time.
+- **One inconsistent item.** On the returns-conveyor lesson, "swap it with the first non refund" was credited for
+  the refund rule in tries 1 and 2, and the vaguer "swapping REFUND packages toward the beginning" wasn't in tries
+  3 and 4. The rubric asks for the front boundary and for both pointers to move, so the later calls match it and
+  the early ones were lenient. Every try failed on core items either way.
+- **Strong last hints.** The level-3 hint on that lesson laid out most of the algorithm. It passed the leak
+  checker, which allows more at level 3, but it was close to the answer.
+- **Spending.** $0.33 of tutor cost in total, well under the $1 daily budget, and no attempt fell back to
+  word-matching grading.
+
+The database keeps each item's hit or miss but not the tutor's evidence for it, so reviewing a grade like the one
+above means comparing the answer with the rubric by hand.
+
 ## The eval gate in CI
 
 GitHub Actions runs three workflows on every push to `main` and every pull request:
