@@ -167,8 +167,8 @@ async def submit_attempt(
         }
         await conn.execute(
             """INSERT INTO attempts (lesson_id, attempt, answer, verdict, items, hint, hint_level, hint_source,
-                                     cost_usd, latency_s, graded_by)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                                     cost_usd, latency_s, graded_by, evidence)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 lesson["id"],
                 attempt["attempt"],
@@ -181,6 +181,7 @@ async def submit_attempt(
                 result.cost_usd,
                 result.latency_s,
                 graded_by,
+                json.dumps({c.rubric_id: c.evidence for c in result.items}),
             ),
         )
         outcome = None

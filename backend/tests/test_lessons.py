@@ -65,6 +65,10 @@ def test_pass_after_a_hint_finishes_and_schedules(clean_db, content):
         await todays_lesson(conn, content, learner, NOON)
         a1, lesson = await submit_attempt(conn, content, learner, "wrong idea", NOON, fake_grader)
         assert (a1["verdict"], a1["hint_level"], lesson["status"]) == ("fail", 1, "open")
+        assert "evidence" not in a1  # stays on the server: it can describe the hidden rubric
+        cur = await conn.execute("SELECT evidence FROM attempts WHERE lesson_id = %s", (lesson["id"],))
+        evidence = (await cur.fetchone())[0]
+        assert evidence == {r: f"says {r}" for r in content.scenarios[lesson["scenario_id"]].rubric_ids}
         a2, lesson = await submit_attempt(conn, content, learner, "right idea", NOON, fake_grader)
         assert (a2["attempt"], a2["verdict"], lesson["status"], lesson["outcome"]) == (2, "pass", "passed", "hinted")
         with pytest.raises(LessonError) as e:

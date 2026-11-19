@@ -166,7 +166,9 @@ def fake_grader(scenario, answer, history, learner_id):
         learner_id=learner_id,
         attempt=len(previous) + 1,
         hint_level=level,
-        items=[ItemCall(rubric_id=r, evidence="e", hit=ok or n == 0) for n, r in enumerate(scenario.rubric_ids)],
+        items=[
+            ItemCall(rubric_id=r, evidence=f"says {r}", hit=ok or n == 0) for n, r in enumerate(scenario.rubric_ids)
+        ],
         verdict="pass" if ok else "fail",
         hint="" if ok else f"Hint {level}.",
         hint_source="" if ok else "tutor",

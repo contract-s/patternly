@@ -68,3 +68,7 @@ CREATE TABLE IF NOT EXISTS reminders (
 -- Which grader handled an attempt: the tutor, or the free offline grader (demo limits or --offline).
 ALTER TABLE attempts ADD COLUMN IF NOT EXISTS graded_by text NOT NULL DEFAULT 'tutor'
     CHECK (graded_by IN ('tutor', 'offline'));
+
+-- The grader's evidence for each rubric item (rubric id -> text), so a grade can be reviewed later. Kept on the
+-- server only: it can describe the rubric, which learners don't see.
+ALTER TABLE attempts ADD COLUMN IF NOT EXISTS evidence jsonb NOT NULL DEFAULT '{}';
