@@ -52,8 +52,8 @@ And from the live site and the development set:
 
 | What was measured | Result |
 |---|---|
-| Time to grade an answer on the live site | 14.6 s typical, 19.0 s slowest (7 attempts, mostly test traffic) |
-| Cost to grade an answer on the live site | $0.026 on average |
+| Time to grade an answer on the live site | 12.5 s typical, 19.0 s slowest (14 attempts from 2026-11-17 to 11-19, my own lessons and testing) |
+| Cost to grade an answer on the live site | $0.024 on average |
 | Finding the right pattern note for an answer (top 3 results) | 82.5% with hybrid search, 77.5% with vector search alone |
 
 All the details, including how each number was measured, the runs behind it, and what didn't work, are in

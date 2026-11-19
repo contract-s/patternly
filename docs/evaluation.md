@@ -12,7 +12,7 @@ links to a saved run in [`evals/runs/`](../evals/runs/). Paths in links are rela
 | Alternative-solution recognition | 100% (3 of 3 in every run) | 3 sealed alternative answers |
 | Hint leak rate | 0 of 117 delivered hints flagged; 2 of 117 first drafts rejected and rewritten | 39 hints per run, 3 runs |
 | Retrieval hit rate (vector vs. hybrid + rerank) | Hit@3 77.5% vector, 82.5% hybrid, 82.5% hybrid + rerank | 40 development answers |
-| p95 latency / cost per attempt | Eval runs: p95 14.7–15.6 s, $0.017–0.020 per attempt. Live site: p95 19.0 s, $0.026 mean ($0.035 max) per attempt | Eval: 46 attempts per run. Live: 7 attempts on 2026-11-17, mostly test traffic |
+| p95 latency / cost per attempt | Eval runs: p95 14.7–15.6 s, $0.017–0.020 per attempt. Live site: p50 12.5 s, p95 19.0 s, $0.024 mean ($0.035 max) per attempt | Eval: 46 attempts per run. Live: 14 attempts from 2026-11-17 to 2026-11-19, my own lessons and testing |
 
 The first four rows are from the tutor loop (`claude-opus-5-5`, effort `medium`, leak judge `claude-haiku-5-5`)
 on the 20 sealed answers, run three times on 2026-11-16 after development was finished. False-fail rate was 0.0%
@@ -26,8 +26,10 @@ Two caveats. The leak rate is measured by the same checker (pattern name, copied
 screens hints before delivery, so it shows the screen works, not that a human would find no leaks; on its own the
 judge also flagged 18 of 90 hand-written hints, so it errs toward flagging. Retrieval was only measured on the
 development answers. The live numbers come from the server's traces (`patternly trace-report --since 2026-11-17`):
-7 graded attempts, mostly test submissions, so with a sample that small the p95 is simply the slowest attempt. Live
-attempts were slower and cost more than in the eval runs; the cause wasn't measured.
+14 tutor-graded attempts (11 from my own daily lessons, 3 test submissions), so with a sample that small the p95 is
+simply the slowest attempt. A 15th request, a test sent before the fallback grader existed, failed at the Claude API
+with a 400 and returned an error; it isn't in the latency or cost numbers. Live attempts were slower and cost more
+than in the eval runs; the cause wasn't measured.
 
 These sealed runs graded with the rule from before 2026-11-17, when minor rubric items were added (see "Minor rubric
 items" below). The sealed set hasn't been rerun with the new rule. Development numbers are below.
