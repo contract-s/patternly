@@ -88,6 +88,19 @@ With neither, tracing is off.
 model turns per attempt (`--since 2026-11-14` for one stretch). In Docker:
 `docker compose exec api patternly trace-report`.
 
+## Reviewing grades
+
+Each attempt stores, next to the hit or miss for every rubric item, the grader's evidence for that call (the
+`evidence` column on `attempts`, rubric id to text). It stays on the server, since it can describe the rubric
+learners don't see. To review recent grades on the live database:
+
+```
+cd /opt/patternly && sudo docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml \
+  exec db psql -U patternly -c "SELECT id, answer, items, evidence FROM attempts ORDER BY id DESC LIMIT 5"
+```
+
+Attempts graded before this column existed have an empty `{}`.
+
 ## Tester metrics
 
 `patternly tester-report --start 2026-11-16 --exclude you@example.com` reads the database and prints numbers for

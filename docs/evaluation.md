@@ -178,8 +178,9 @@ lessons and 3 test submissions. These are observations from a handful of attempt
 - **Spending.** $0.33 of tutor cost in total, well under the $1 daily budget, and no attempt fell back to
   word-matching grading.
 
-The database keeps each item's hit or miss but not the tutor's evidence for it, so reviewing a grade like the one
-above means comparing the answer with the rubric by hand.
+These attempts kept each item's hit or miss but not the tutor's evidence for it, so the grade above was reviewed by
+comparing the answer with the rubric by hand. Attempts now store the evidence too (see
+[Reviewing grades](how-it-works.md#reviewing-grades)).
 
 ## The eval gate in CI
 
